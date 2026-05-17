@@ -44,6 +44,24 @@
       padding: 28px 18px 40px;
     }
 
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      color: var(--accent);
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .home-link:hover,
+    .home-link:focus-visible {
+      color: var(--ink);
+      text-decoration: underline;
+      outline: none;
+    }
+
     h1 {
       margin: 0;
       font-family: "Source Serif 4", serif;
@@ -374,6 +392,7 @@
 </head>
 <body>
   <div class="wrap">
+    <a class="home-link" href="../index.html" aria-label="Back to Housing Calculators home">&larr; Housing Calculators</a>
     <h1>Rent vs Buy Net Worth Simulator</h1>
     <p class="subtitle">
       Compare yearly net worth for renting versus buying under the same starting cash and assumptions.

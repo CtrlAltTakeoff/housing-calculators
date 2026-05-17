@@ -38,6 +38,24 @@
       padding: 32px 20px 64px;
     }
 
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      color: var(--accent);
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .home-link:hover,
+    .home-link:focus-visible {
+      color: var(--ink);
+      text-decoration: underline;
+      outline: none;
+    }
+
     .hero {
       display: grid;
       gap: 12px;
@@ -471,6 +489,7 @@
 </head>
 <body>
   <main class="shell">
+    <a class="home-link" href="../index.html" aria-label="Back to Housing Calculators home">&larr; Housing Calculators</a>
     <section class="hero">
       <p class="eyebrow">Mortgage affordability planner</p>
       <h1>House Affordability Calculator</h1>
