@@ -7,13 +7,18 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9;
-      --panel: #ffffff;
-      --text: #1d252d;
-      --muted: #5f6b76;
-      --line: #d9dee5;
-      --accent: #176b87;
-      --accent-dark: #0f4f63;
+      --bg: #fbf7ef;
+      --bg-soft: #fffdf8;
+      --ink: #27323a;
+      --muted: #69737c;
+      --line: #eadfce;
+      --roof: #dd6b4d;
+      --roof-dark: #b64d37;
+      --sage: #7aa889;
+      --sky: #8cc7d7;
+      --gold: #e4ad49;
+      --paper: #ffffff;
+      --shadow: 0 18px 50px rgb(83 62 36 / 14%);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -24,104 +29,451 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
+      background:
+        linear-gradient(180deg, rgb(255 253 248 / 88%), rgb(251 247 239 / 96%)),
+        repeating-linear-gradient(90deg, transparent 0 31px, rgb(221 107 77 / 8%) 31px 32px),
+        var(--bg);
+      color: var(--ink);
     }
 
     main {
-      width: min(960px, calc(100% - 32px));
+      width: min(1080px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 56px 0;
+      padding: 44px 0 56px;
     }
 
-    header {
-      margin-bottom: 32px;
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+      align-items: center;
+      gap: 34px;
+      min-height: 360px;
+      padding: 18px 0 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      color: var(--roof-dark);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 34px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--gold);
+      content: "";
     }
 
     h1 {
-      margin: 0 0 10px;
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      line-height: 1.05;
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(2.5rem, 8vw, 5.8rem);
+      line-height: 0.95;
       letter-spacing: 0;
     }
 
-    p {
-      margin: 0;
-      max-width: 680px;
+    .hero-copy {
+      max-width: 640px;
+      margin: 20px 0 0;
       color: var(--muted);
-      font-size: 1.05rem;
-      line-height: 1.6;
+      font-size: clamp(1.02rem, 2vw, 1.2rem);
+      line-height: 1.65;
+    }
+
+    .neighborhood {
+      position: relative;
+      min-height: 310px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 82% 18%, rgb(228 173 73 / 25%) 0 38px, transparent 39px),
+        linear-gradient(180deg, #ecf8fb 0 54%, #edf4e8 54% 100%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .neighborhood::before {
+      position: absolute;
+      inset: auto -8% 0;
+      height: 88px;
+      background:
+        radial-gradient(ellipse at 20% 100%, #b9d5a3 0 38%, transparent 39%),
+        radial-gradient(ellipse at 70% 100%, #8fbf8f 0 43%, transparent 44%),
+        linear-gradient(180deg, transparent, #8fbf8f);
+      content: "";
+    }
+
+    .house {
+      position: absolute;
+      bottom: 56px;
+      width: 150px;
+      height: 132px;
+    }
+
+    .house::before {
+      position: absolute;
+      top: 0;
+      left: 16px;
+      width: 118px;
+      height: 74px;
+      background: var(--roof);
+      clip-path: polygon(50% 0, 100% 58%, 86% 58%, 86% 100%, 14% 100%, 14% 58%, 0 58%);
+      content: "";
+    }
+
+    .house::after {
+      position: absolute;
+      right: 20px;
+      bottom: 0;
+      left: 20px;
+      height: 76px;
+      border: 1px solid rgb(112 72 49 / 16%);
+      border-radius: 6px 6px 4px 4px;
+      background: #fff8e8;
+      box-shadow: inset 0 -9px rgb(236 210 171 / 55%);
+      content: "";
+    }
+
+    .house-large {
+      right: 28px;
+      transform: scale(1.18);
+      transform-origin: bottom right;
+    }
+
+    .house-small {
+      left: 34px;
+      bottom: 46px;
+      transform: scale(0.78);
+      transform-origin: bottom left;
+    }
+
+    .window,
+    .door,
+    .chimney,
+    .calculator {
+      position: absolute;
+      z-index: 2;
+    }
+
+    .window {
+      bottom: 47px;
+      left: 42px;
+      width: 28px;
+      height: 24px;
+      border: 3px solid #f7d17b;
+      border-radius: 4px;
+      background: var(--sky);
+      box-shadow: 47px 0 0 -3px var(--sky), 47px 0 0 0 #f7d17b;
+    }
+
+    .door {
+      right: 43px;
+      bottom: 1px;
+      width: 30px;
+      height: 48px;
+      border-radius: 14px 14px 3px 3px;
+      background: var(--sage);
+    }
+
+    .chimney {
+      top: 4px;
+      right: 33px;
+      width: 20px;
+      height: 36px;
+      border-radius: 4px 4px 0 0;
+      background: var(--roof-dark);
+    }
+
+    .calculator {
+      right: 46px;
+      bottom: 37px;
+      width: 86px;
+      padding: 11px;
+      border: 1px solid rgb(55 63 68 / 12%);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 14px 32px rgb(72 59 41 / 18%);
+    }
+
+    .calculator-screen {
+      height: 18px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      background: #dcefe7;
+    }
+
+    .calculator-keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+
+    .calculator-keys span {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: #f0e4d4;
+    }
+
+    .coin {
+      position: absolute;
+      z-index: 3;
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 2px solid #c98b20;
+      border-radius: 50%;
+      background: #f6c967;
+      color: #906014;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgb(144 96 20 / 18%);
+    }
+
+    .coin-one {
+      top: 58px;
+      left: 44px;
+    }
+
+    .coin-two {
+      top: 98px;
+      right: 90px;
+      transform: scale(0.78);
     }
 
     .calculator-list {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin: 0;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 8px 0 0;
       padding: 0;
       list-style: none;
     }
 
     .calculator-link {
-      display: block;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 238px;
       height: 100%;
       padding: 22px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: var(--panel);
+      background: var(--paper);
       color: inherit;
       text-decoration: none;
+      box-shadow: 0 10px 28px rgb(83 62 36 / 8%);
       transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
     }
 
     .calculator-link:hover,
     .calculator-link:focus-visible {
-      border-color: var(--accent);
-      box-shadow: 0 12px 32px rgb(21 43 62 / 12%);
-      transform: translateY(-2px);
+      border-color: var(--roof);
+      box-shadow: var(--shadow);
+      transform: translateY(-3px);
       outline: none;
+    }
+
+    .app-icon {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      margin-bottom: 18px;
+      place-items: center;
+      border-radius: 8px;
+      background: #fff1dc;
+      color: var(--roof-dark);
+      font-size: 1.55rem;
+      font-weight: 900;
+    }
+
+    .app-icon svg {
+      width: 31px;
+      height: 31px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 2.25;
     }
 
     .calculator-title {
       display: block;
-      margin-bottom: 8px;
-      color: var(--accent-dark);
-      font-size: 1.15rem;
-      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--ink);
+      font-size: 1.18rem;
+      font-weight: 800;
+      line-height: 1.25;
     }
 
     .calculator-description {
       display: block;
       color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
+      font-size: 0.96rem;
+      line-height: 1.55;
+    }
+
+    .open-app {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      color: var(--roof-dark);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .open-app::after {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: #654209;
+      content: ">";
+      display: grid;
+      place-items: center;
+      font-size: 0.76rem;
+      line-height: 1;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        padding-top: 28px;
+      }
+
+      .hero,
+      .calculator-list {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: 0;
+      }
+
+      .neighborhood {
+        min-height: 280px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      main {
+        width: min(100% - 24px, 1080px);
+        padding-bottom: 36px;
+      }
+
+      .neighborhood {
+        min-height: 238px;
+      }
+
+      .house-large {
+        right: -4px;
+        transform: scale(0.98);
+      }
+
+      .house-small {
+        left: 14px;
+        transform: scale(0.62);
+      }
+
+      .calculator {
+        right: 24px;
+        bottom: 28px;
+      }
+
+      .calculator-link {
+        min-height: 218px;
+      }
     }
   </style>
 </head>
 <body>
   <main>
-    <header>
-      <h1>Housing Calculators</h1>
-      <p>Quick access to the home buying, borrowing, and affordability calculators in this repository.</p>
-    </header>
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <span class="eyebrow">Home math, made friendlier</span>
+        <h1 id="page-title">Housing Calculators</h1>
+        <p class="hero-copy">Plan a purchase, compare rent against buy, and sanity-check monthly costs with a tidy set of browser-based calculators.</p>
+      </div>
+
+      <div class="neighborhood" aria-hidden="true">
+        <div class="coin coin-one">$</div>
+        <div class="coin coin-two">$</div>
+        <div class="house house-small">
+          <span class="chimney"></span>
+          <span class="window"></span>
+          <span class="door"></span>
+        </div>
+        <div class="house house-large">
+          <span class="chimney"></span>
+          <span class="window"></span>
+          <span class="door"></span>
+        </div>
+        <div class="calculator">
+          <div class="calculator-screen"></div>
+          <div class="calculator-keys">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <ul class="calculator-list" aria-label="Calculator apps">
       <li>
         <a class="calculator-link" href="apps/affordability_calculator.html">
-          <span class="calculator-title">House Affordability Calculator</span>
-          <span class="calculator-description">Estimate a maximum home price from income, debt, cash, and recurring ownership costs.</span>
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 11.5 12 4l9 7.5"></path>
+              <path d="M5.5 10.5V20h13v-9.5"></path>
+              <path d="M9.5 20v-6h5v6"></path>
+            </svg>
+          </span>
+          <span>
+            <span class="calculator-title">House Affordability Calculator</span>
+            <span class="calculator-description">Estimate a maximum home price from income, debt, cash, and recurring ownership costs.</span>
+          </span>
+          <span class="open-app">Open calculator</span>
         </a>
       </li>
       <li>
         <a class="calculator-link" href="apps/mortage_calculator.html">
-          <span class="calculator-title">Mortgage Calculator</span>
-          <span class="calculator-description">Model monthly mortgage payments, taxes, insurance, HOA costs, and amortization.</span>
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="6" y="3" width="12" height="18" rx="2"></rect>
+              <path d="M9 7h6"></path>
+              <path d="M9 11h.01M12 11h.01M15 11h.01M9 15h.01M12 15h.01M15 15h.01"></path>
+            </svg>
+          </span>
+          <span>
+            <span class="calculator-title">Mortgage Calculator</span>
+            <span class="calculator-description">Model monthly mortgage payments, taxes, insurance, HOA costs, and amortization.</span>
+          </span>
+          <span class="open-app">Open calculator</span>
         </a>
       </li>
       <li>
         <a class="calculator-link" href="apps/rent_vs_buy_simulation.html">
-          <span class="calculator-title">Rent vs Buy Simulator</span>
-          <span class="calculator-description">Compare renting and buying scenarios over time with net worth projections.</span>
+          <span class="app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 18V8"></path>
+              <path d="M9 18V5"></path>
+              <path d="M14 18v-7"></path>
+              <path d="M19 18V6"></path>
+              <path d="M3 18h18"></path>
+              <path d="m4 8 5-3 5 6 5-5"></path>
+            </svg>
+          </span>
+          <span>
+            <span class="calculator-title">Rent vs Buy Simulator</span>
+            <span class="calculator-description">Compare renting and buying scenarios over time with net worth projections.</span>
+          </span>
+          <span class="open-app">Open simulator</span>
         </a>
       </li>
     </ul>
