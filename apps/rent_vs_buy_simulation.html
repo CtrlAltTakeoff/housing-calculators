@@ -1,0 +1,1473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rent vs Buy Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f2e9;
+      --paper: #fffdfa;
+      --ink: #13251c;
+      --muted: #5e6b64;
+      --accent: #0f6e4f;
+      --accent-2: #f2b34c;
+      --danger: #ad2f22;
+      --line-rent: #1d7a58;
+      --line-buy: #c17a10;
+      --radius: 16px;
+      --shadow: 0 18px 40px rgba(19, 37, 28, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(242, 179, 76, 0.22), transparent 35%),
+        radial-gradient(circle at 85% 8%, rgba(15, 110, 79, 0.17), transparent 30%),
+        linear-gradient(180deg, #fbf8f0 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Source Serif 4", serif;
+      font-size: clamp(1.9rem, 4vw, 2.9rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      margin: 10px 0 22px;
+      max-width: 72ch;
+      color: var(--muted);
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+
+    .panel {
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .layout {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+    }
+
+    .form-panel {
+      padding: 18px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #284538;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .help-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid #8ea598;
+      background: #f3f8f5;
+      color: #1b4332;
+      font-weight: 700;
+      line-height: 1;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .help-btn:hover {
+      transform: none;
+      background: #e8f1ec;
+    }
+
+    .help-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(15, 110, 79, 0.2);
+      border-color: #0f6e4f;
+    }
+
+    .help-text {
+      border-left: 3px solid #95b9a8;
+      padding-left: 8px;
+      color: #2d4f41;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      margin-top: -1px;
+    }
+
+    .help-text[hidden] {
+      display: none;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid #ced8d2;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.94rem;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 110, 79, 0.16);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 110, 79, 0.16);
+    }
+
+    .input-shell {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .step-btn {
+      width: 34px;
+      min-height: 42px;
+      border-radius: 10px;
+      padding: 0;
+      background: #eef5f1;
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px #b9cec4;
+      font-size: 1.05rem;
+      line-height: 1;
+    }
+
+    .step-btn:hover {
+      transform: none;
+      background: #e4efe9;
+    }
+
+    .field.error input {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(173, 47, 34, 0.12);
+    }
+
+    .error-text {
+      min-height: 1.1em;
+      font-size: 0.78rem;
+      color: var(--danger);
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      background: linear-gradient(135deg, var(--accent), #0d8a63);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 150ms ease;
+      box-shadow: 0 12px 26px rgba(15, 110, 79, 0.25);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      box-shadow: inset 0 0 0 2px var(--accent);
+      font-weight: 600;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(15, 110, 79, 0.07);
+    }
+
+    .status {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .result-panel {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr;
+      max-height: 80vh;
+      overflow-y: auto;
+      border-right: 1px solid #e0e0e0;
+    }
+
+    .summary {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 12px;
+      background: #f7f9f7;
+      border: 1px solid #d8e0db;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 0.82rem;
+      color: #315646;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1f2f27;
+      word-break: break-word;
+    }
+
+    .winner {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #173a2c;
+      border-left: 4px solid var(--accent-2);
+      padding-left: 10px;
+    }
+
+    .chart-wrap {
+      border: 1px solid #d8e0db;
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .chart-title {
+      margin: 0 0 8px;
+      font-size: 0.9rem;
+      color: #284538;
+      font-weight: 700;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .chart-header .chart-title {
+      margin: 0;
+    }
+
+    .chart-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chart-control label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #315646;
+    }
+
+    .chart-control select {
+      width: auto;
+      min-width: 240px;
+      padding-right: 34px;
+    }
+
+    #pointDetails {
+      font-size: 0.86rem;
+      color: #3d5449;
+      min-height: 1.2em;
+    }
+
+    #differencePointDetails {
+      font-size: 0.86rem;
+      color: #3d5449;
+      min-height: 1.2em;
+    }
+
+    #supplementalPointDetails {
+      font-size: 0.86rem;
+      color: #3d5449;
+      min-height: 1.2em;
+    }
+
+    @media (min-width: 960px) {
+      .layout {
+        grid-template-columns: 1.05fr 1.35fr;
+        align-items: start;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+    }
+
+    @media (max-width: 740px) {
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Rent vs Buy Net Worth Simulator</h1>
+    <p class="subtitle">
+      Compare yearly net worth for renting versus buying under the same starting cash and assumptions.
+      The model runs on monthly cash flow and monthly investment growth, with yearly charted outputs.
+      Annual maintenance, home insurance, and HOA are assumed to increase by 2% per year due to inflation.
+      Buy-side net worth assumes a 5% selling closing cost when the home is sold, and the homeowner plot can be switched to inspect key buy-side costs and values over time.
+    </p>
+
+    <div class="layout">
+      <section class="panel form-panel" aria-label="Simulation inputs">
+        <form id="simForm" novalidate>
+          <div class="field-grid" id="fieldGrid"></div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" id="saveBtn">Save Inputs</button>
+            <button type="button" class="btn-secondary" id="loadBtn">Load Inputs</button>
+            <input type="file" id="loadFileInput" accept=".json" hidden aria-hidden="true" />
+            <div class="status" id="statusText">Simulation updates automatically when inputs are valid.</div>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel result-panel" aria-label="Simulation results">
+        <div class="summary">
+          <article class="card">
+            <h3>Final Rent Net Worth</h3>
+            <div class="value" id="rentFinal">-</div>
+          </article>
+          <article class="card">
+            <h3>Final Buy Net Worth</h3>
+            <div class="value" id="buyFinal">-</div>
+          </article>
+          <article class="card">
+            <h3>Difference</h3>
+            <div class="value" id="deltaFinal">-</div>
+          </article>
+        </div>
+        <div class="winner" id="winnerText">Run a simulation to see which path leads in final net worth.</div>
+        <div class="chart-wrap">
+          <h3 class="chart-title">Net Worth by Year</h3>
+          <canvas id="netWorthChart" aria-label="Net worth comparison chart" role="img"></canvas>
+        </div>
+        <div id="pointDetails">Hover or click a point to see exact yearly values.</div>
+        <div class="chart-wrap">
+          <h3 class="chart-title">Buy vs Rent Difference by Year (Buy - Rent)</h3>
+          <canvas id="differenceChart" aria-label="Net worth difference chart" role="img"></canvas>
+        </div>
+        <div id="differencePointDetails">Hover or click a point to see yearly net-worth difference.</div>
+        <div class="chart-wrap">
+          <div class="chart-header">
+            <h3 class="chart-title" id="supplementalChartTitle">Home Value by Year</h3>
+            <div class="chart-control">
+              <label for="plotMetricSelect">Plot</label>
+              <select id="plotMetricSelect" aria-label="Select homeowner plot">
+                <option value="homeValue">Home value over time</option>
+                <option value="annualMaintenance">Annual maintenance cost over time</option>
+                <option value="annualPropertyTax">Assessed property tax over time</option>
+                <option value="mortgageBalance">Mortgage balance over time</option>
+                <option value="annualInsurance">Home insurance over time</option>
+                <option value="cashFlowComparison">Cash flow comparison (rent vs buy)</option>
+                <option value="stockGainsComparison">Net gains and contributions (rent vs buy)</option>
+              </select>
+            </div>
+          </div>
+          <canvas id="supplementalChart" aria-label="Supplemental homeowner chart" role="img"></canvas>
+        </div>
+        <div id="supplementalPointDetails">Hover or click a point to see yearly homeowner values.</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const SELLING_CLOSING_COST_RATE = 0.05;
+    const ANNUAL_HOUSING_INFLATION_RATE = 0.02;
+    const SUPPLEMENTAL_PLOT_CONFIG = {
+      homeValue: {
+        title: "Home Value by Year",
+        datasetLabel: "Home Value",
+        detailLabel: "Home value",
+        axisTitle: "Value",
+        borderColor: "#8a5cff",
+        backgroundColor: "rgba(138, 92, 255, 0.18)"
+      },
+      annualMaintenance: {
+        title: "Annual Maintenance Cost by Year",
+        datasetLabel: "Annual Maintenance Cost",
+        detailLabel: "Annual maintenance cost",
+        axisTitle: "Annual Cost",
+        borderColor: "#ca5d34",
+        backgroundColor: "rgba(202, 93, 52, 0.18)"
+      },
+      annualPropertyTax: {
+        title: "Annual Property Tax by Year",
+        datasetLabel: "Annual Property Tax",
+        detailLabel: "Annual property tax",
+        axisTitle: "Annual Cost",
+        borderColor: "#245fcb",
+        backgroundColor: "rgba(36, 95, 203, 0.18)"
+      },
+      mortgageBalance: {
+        title: "Mortgage Balance by Year",
+        datasetLabel: "Remaining Mortgage Balance",
+        detailLabel: "Remaining mortgage balance",
+        axisTitle: "Balance",
+        borderColor: "#8b4a2d",
+        backgroundColor: "rgba(139, 74, 45, 0.18)"
+      },
+      annualInsurance: {
+        title: "Annual Home Insurance Cost by Year",
+        datasetLabel: "Annual Home Insurance",
+        detailLabel: "Annual home insurance",
+        axisTitle: "Annual Cost",
+        borderColor: "#0b8a84",
+        backgroundColor: "rgba(11, 138, 132, 0.18)"
+      },
+      cashFlowComparison: {
+        title: "Cumulative Net Expenditure by Year",
+        datasetLabel: "Rent",
+        detailLabel: "Cumulative expenditure",
+        axisTitle: "Cumulative Expenditure",
+        isTwoSeries: true,
+        series1: { label: "Rent Path", borderColor: "#1d7a58", backgroundColor: "rgba(29, 122, 88, 0.18)" },
+        series2: { label: "Buy Path", borderColor: "#c17a10", backgroundColor: "rgba(193, 122, 16, 0.2)" }
+      },
+      stockGainsComparison: {
+        title: "Net Gains and Contributions by Year",
+        datasetLabel: "Investment",
+        detailLabel: "Net investment balance",
+        axisTitle: "Investment Balance",
+        isTwoSeries: true,
+        series1: { label: "Rent Path", borderColor: "#1d7a58", backgroundColor: "rgba(29, 122, 88, 0.18)" },
+        series2: { label: "Buy Path", borderColor: "#c17a10", backgroundColor: "rgba(193, 122, 16, 0.2)" }
+      }
+    };
+
+    const fieldConfig = [
+      {
+        key: "homeGrowthPct",
+        label: "Home value growth (% YoY)",
+        step: "0.1",
+        default: 5,
+        help: "Expected yearly home price appreciation. Higher values usually improve buy-side home equity growth."
+      },
+      {
+        key: "rentGrowthPct",
+        label: "Rent growth (% YoY)",
+        step: "0.1",
+        default: 5,
+        help: "Expected yearly rent increases. Higher values make renting more expensive over time."
+      },
+      {
+        key: "stockGrowthPct",
+        label: "Stock market growth (% YoY)",
+        step: "0.1",
+        default: 10,
+        help: "Expected yearly return on invested cash. Higher values boost both paths' investment balances."
+      },
+      {
+        key: "monthlyRent",
+        label: "Current monthly rent ($)",
+        step: "100",
+        default: 3000,
+        help: "Starting monthly rent payment. Higher rent typically reduces rent-path monthly investing capacity."
+      },
+      {
+        key: "purchasePrice",
+        label: "Home purchase price ($)",
+        step: "50000",
+        default: 1000000,
+        help: "Home purchase amount. Higher price increases loan size and ownership costs, but can increase upside from appreciation."
+      },
+      {
+        key: "downPayment",
+        label: "Available down payment cash ($)",
+        step: "50000",
+        default: 200000,
+        help: "Cash paid at purchase. A higher down payment lowers loan balance and interest costs."
+      },
+      {
+        key: "renovationCost",
+        label: "Initial renovation cost ($)",
+        step: "50000",
+        default: 50000,
+        help: "One-time upfront renovation spending at purchase. In the rent path, this same cash is invested in stocks."
+      },
+      {
+        key: "closingCost",
+        label: "One-time purchase closing cost ($)",
+        step: "500",
+        default: 20000,
+        help: "One-time closing cost paid at purchase. In the rent path, this same cash is invested in stocks."
+      },
+      {
+        key: "propertyTaxPct",
+        label: "Property tax rate (% annual)",
+        step: "0.1",
+        default: 1.2,
+        help: "Annual tax as a percent of assessed value. Higher tax reduces buy-path monthly investable cash."
+      },
+      {
+        key: "monthlyHoaCost",
+        label: "Monthly HOA cost ($)",
+        step: "100",
+        default: 0,
+        help: "Monthly HOA dues. Higher HOA costs reduce buy-path monthly investable cash. This amount increases by 2% each year in the model."
+      },
+      {
+        key: "annualMaintenance",
+        label: "Annual maintenance cost ($)",
+        step: "100",
+        default: 10000,
+        help: "Annual upkeep budget for repairs, landscaping, and maintenance. This amount increases by 2% each year in the model."
+      },
+      {
+        key: "assessedCapPct",
+        label: "Max assessed value growth (% annual)",
+        step: "0.1",
+        default: 1,
+        help: "Annual cap used for tax assessment growth. Lower caps usually slow property-tax increases over time."
+      },
+      {
+        key: "mortgageRatePct",
+        label: "Mortgage interest rate (% annual)",
+        step: "0.1",
+        default: 6,
+        help: "Fixed mortgage rate for a 30-year loan. Higher rates increase monthly mortgage cost and reduce buy-path cash flow."
+      },
+      {
+        key: "monthlyHousingAllocation",
+        label: "Monthly allocation for housing ($)",
+        step: "1000",
+        default: 10000,
+        help: "Monthly budget allocated to housing and housing-related investing in either scenario. Higher allocation raises monthly investable cash after housing costs."
+      },
+      {
+        key: "annualInsurance",
+        label: "Annual home insurance ($)",
+        step: "100",
+        default: 2000,
+        help: "Yearly homeowners insurance cost. This amount increases by 2% each year in the model and reduces buy-path monthly investable cash."
+      },
+      {
+        key: "taxBracketPct",
+        label: "Tax bracket (%)",
+        step: "0.1",
+        default: 30,
+        help: "Your marginal income tax bracket. Each year the IRS effectively refunds this percentage of mortgage interest and property taxes paid. That refund is reinvested in stocks in the buy scenario. Example: at 30%, every $1 of mortgage interest or property tax reduces your tax bill by $0.30."
+      },
+      {
+        key: "years",
+        label: "Simulation length (years)",
+        step: "1",
+        default: 30,
+        help: "Projection horizon. Longer periods increase the impact of compounding, growth rates, and cost trends."
+      }
+    ];
+
+    const ui = {
+      form: document.getElementById("simForm"),
+      fieldGrid: document.getElementById("fieldGrid"),
+      statusText: document.getElementById("statusText"),
+      rentFinal: document.getElementById("rentFinal"),
+      buyFinal: document.getElementById("buyFinal"),
+      deltaFinal: document.getElementById("deltaFinal"),
+      winnerText: document.getElementById("winnerText"),
+      pointDetails: document.getElementById("pointDetails"),
+      differencePointDetails: document.getElementById("differencePointDetails"),
+      supplementalPointDetails: document.getElementById("supplementalPointDetails"),
+      chartCanvas: document.getElementById("netWorthChart"),
+      differenceChartCanvas: document.getElementById("differenceChart"),
+      supplementalChartCanvas: document.getElementById("supplementalChart"),
+      supplementalChartTitle: document.getElementById("supplementalChartTitle"),
+      plotMetricSelect: document.getElementById("plotMetricSelect")
+    };
+
+    const currencyFmt = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    });
+
+    const percentFmt = new Intl.NumberFormat("en-US", {
+      style: "percent",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    let chart;
+    let differenceChart;
+    let supplementalChart;
+    let latestResults = null;
+
+    function annualPctToMonthlyRate(pct) {
+      const annualRate = pct / 100;
+      return Math.pow(1 + annualRate, 1 / 12) - 1;
+    }
+
+    function calculateMortgagePayment(principal, annualRatePct, months = 360) {
+      if (principal <= 0) return 0;
+      const monthlyRate = annualPctToMonthlyRate(annualRatePct);
+      if (monthlyRate === 0) return principal / months;
+      return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+    }
+
+    function calculateNetSaleProceeds(homeMarketValue, remainingLoanBalance) {
+      return homeMarketValue * (1 - SELLING_CLOSING_COST_RATE) - remainingLoanBalance;
+    }
+
+    function buildDifferenceSeries(results) {
+      return results.buySeries.map((buyValue, idx) => buyValue - results.rentSeries[idx]);
+    }
+
+    function getSelectedSupplementalMetric() {
+      return ui.plotMetricSelect.value in SUPPLEMENTAL_PLOT_CONFIG
+        ? ui.plotMetricSelect.value
+        : "homeValue";
+    }
+
+    function getStepPrecision(stepValue) {
+      const stepText = String(stepValue);
+      const decimalIndex = stepText.indexOf(".");
+      return decimalIndex === -1 ? 0 : stepText.length - decimalIndex - 1;
+    }
+
+    function isCurrencyField(field) {
+      return field.label.includes("($)");
+    }
+
+    function parseInputValue(rawValue) {
+      return Number(String(rawValue).replace(/,/g, "").trim());
+    }
+
+    function formatNumberForField(field, value) {
+      if (!Number.isFinite(value)) return "";
+      if (isCurrencyField(field)) {
+        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+      }
+      return String(value);
+    }
+
+    function normalizeSteppedValue(value, stepValue) {
+      const precision = getStepPrecision(stepValue);
+      return Number(value.toFixed(precision));
+    }
+
+    function setInputDisplayValue(field, input, value) {
+      const normalizedValue = field.key === "years"
+        ? Math.max(1, Math.round(value))
+        : Math.max(0, normalizeSteppedValue(value, Number(field.step)));
+
+      input.value = formatNumberForField(field, normalizedValue);
+    }
+
+    function stepInputValue(field, input, direction) {
+      const currentValue = parseInputValue(input.value);
+      const baseValue = Number.isFinite(currentValue) ? currentValue : 0;
+      setInputDisplayValue(field, input, baseValue + Number(field.step) * direction);
+      maybeRunSimulation();
+    }
+
+    function maybeRunSimulation() {
+      clearErrors();
+
+      const values = parseInputs();
+      const validation = validateInputs(values);
+
+      if (!validation.valid) {
+        Object.entries(validation.errors).forEach(([key, message]) => setFieldError(key, message));
+        ui.statusText.textContent = "Fix highlighted inputs to update the simulation.";
+        return false;
+      }
+
+      const results = runSimulation(values);
+      updateSummary(results);
+      renderChart(results);
+      reportRunMeta(values);
+      return true;
+    }
+
+    function createFields() {
+      fieldConfig.forEach((field) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "field";
+        wrapper.dataset.field = field.key;
+
+        const labelRow = document.createElement("div");
+        labelRow.className = "label-row";
+
+        const label = document.createElement("label");
+        label.setAttribute("for", `field-${field.key}`);
+        label.textContent = field.label;
+
+        const helpButton = document.createElement("button");
+        helpButton.type = "button";
+        helpButton.className = "help-btn";
+        helpButton.textContent = "?";
+        helpButton.setAttribute("aria-label", `Help for ${field.label}`);
+
+        const helpText = document.createElement("div");
+        helpText.className = "help-text";
+        helpText.id = `${field.key}-help`;
+        helpText.textContent = field.help;
+        helpText.hidden = true;
+
+        helpButton.setAttribute("aria-controls", helpText.id);
+        helpButton.setAttribute("aria-expanded", "false");
+        helpButton.addEventListener("click", () => {
+          const isOpen = !helpText.hidden;
+          helpText.hidden = isOpen;
+          helpButton.setAttribute("aria-expanded", String(!isOpen));
+        });
+
+        labelRow.append(label, helpButton);
+
+        const input = document.createElement("input");
+        input.id = `field-${field.key}`;
+        input.name = field.key;
+        input.type = "text";
+        input.step = field.step;
+        input.required = true;
+        input.inputMode = "decimal";
+        input.value = formatNumberForField(field, field.default);
+        input.setAttribute("aria-describedby", `${field.key}-error`);
+        input.setAttribute("autocomplete", "off");
+
+        const inputShell = document.createElement("div");
+        inputShell.className = "input-shell";
+        const downButton = document.createElement("button");
+        downButton.type = "button";
+        downButton.className = "step-btn";
+        downButton.textContent = "-";
+        downButton.setAttribute("aria-label", `Decrease ${field.label} by ${field.step}`);
+        downButton.addEventListener("click", () => stepInputValue(field, input, -1));
+
+        const upButton = document.createElement("button");
+        upButton.type = "button";
+        upButton.className = "step-btn";
+        upButton.textContent = "+";
+        upButton.setAttribute("aria-label", `Increase ${field.label} by ${field.step}`);
+        upButton.addEventListener("click", () => stepInputValue(field, input, 1));
+
+        input.addEventListener("focus", () => {
+          if (isCurrencyField(field)) {
+            input.value = input.value.replace(/,/g, "");
+          }
+        });
+        input.addEventListener("input", maybeRunSimulation);
+        input.addEventListener("change", maybeRunSimulation);
+        input.addEventListener("blur", () => {
+          const value = parseInputValue(input.value);
+          if (Number.isFinite(value)) {
+            setInputDisplayValue(field, input, value);
+          }
+          maybeRunSimulation();
+        });
+        inputShell.append(downButton, input, upButton);
+
+        const error = document.createElement("div");
+        error.id = `${field.key}-error`;
+        error.className = "error-text";
+        error.setAttribute("aria-live", "polite");
+
+        wrapper.append(labelRow, helpText, inputShell, error);
+        ui.fieldGrid.appendChild(wrapper);
+      });
+    }
+
+    function setFieldError(key, message) {
+      const wrapper = ui.fieldGrid.querySelector(`[data-field='${key}']`);
+      if (!wrapper) return;
+      const err = wrapper.querySelector(".error-text");
+      wrapper.classList.toggle("error", Boolean(message));
+      err.textContent = message || "";
+    }
+
+    function clearErrors() {
+      fieldConfig.forEach((f) => setFieldError(f.key, ""));
+    }
+
+    function parseInputs() {
+      const values = {};
+      fieldConfig.forEach((field) => {
+        const input = document.getElementById(`field-${field.key}`);
+        values[field.key] = parseInputValue(input.value);
+      });
+      return values;
+    }
+
+    function validateInputs(v) {
+      const errors = {};
+
+      fieldConfig.forEach((field) => {
+        const value = v[field.key];
+        if (!Number.isFinite(value)) {
+          errors[field.key] = "Required numeric value.";
+          return;
+        }
+
+        if (field.key === "years") {
+          if (!Number.isInteger(value) || value <= 0) {
+            errors[field.key] = "Use a positive whole number of years.";
+          }
+        } else if (field.key === "taxBracketPct") {
+          if (value < 0 || value > 100) {
+            errors[field.key] = "Use a tax bracket between 0 and 100.";
+          }
+        } else if (value < 0) {
+          errors[field.key] = "Value cannot be negative.";
+        }
+      });
+
+      if (!errors.downPayment && !errors.purchasePrice && v.downPayment > v.purchasePrice) {
+        errors.downPayment = "Down payment cannot exceed purchase price.";
+      }
+
+      const initialLoan = Math.max(0, v.purchasePrice - v.downPayment);
+      const mortgagePayment = calculateMortgagePayment(initialLoan, v.mortgageRatePct, 360);
+      const monthlyPropertyTax = (v.propertyTaxPct / 100) * v.purchasePrice / 12;
+      const monthlyInsurance = v.annualInsurance / 12;
+      const monthlyMaintenance = v.annualMaintenance / 12;
+      const monthlyOwnershipCost =
+        mortgagePayment + monthlyPropertyTax + monthlyInsurance + v.monthlyHoaCost + monthlyMaintenance;
+      const requiredIncome = Math.max(v.monthlyRent, monthlyOwnershipCost);
+
+      if (!errors.monthlyHousingAllocation && v.monthlyHousingAllocation < requiredIncome) {
+        errors.monthlyHousingAllocation = `Monthly housing allocation must be at least ${currencyFmt.format(requiredIncome)} (higher of rent or ownership cost).`;
+      }
+
+      return { valid: Object.keys(errors).length === 0, errors };
+    }
+
+    function runSimulation(v) {
+      const months = v.years * 12;
+
+      const monthlyStockRate = annualPctToMonthlyRate(v.stockGrowthPct);
+      const annualHomeFactor = 1 + v.homeGrowthPct / 100;
+      const annualRentFactor = 1 + v.rentGrowthPct / 100;
+      const annualAssessedFactor = 1 + v.assessedCapPct / 100;
+      const annualHousingInflationFactor = 1 + ANNUAL_HOUSING_INFLATION_RATE;
+
+      const upfrontCash = v.downPayment + v.renovationCost + v.closingCost;
+      let rentStock = upfrontCash;
+      let monthlyRent = v.monthlyRent;
+
+      let homeValue = v.purchasePrice;
+      let assessedValue = v.purchasePrice;
+      let monthlyInsurance = v.annualInsurance / 12;
+      let monthlyHoaCost = v.monthlyHoaCost;
+      let monthlyMaintenance = v.annualMaintenance / 12;
+      let loanBalance = Math.max(0, v.purchasePrice - v.downPayment);
+      const mortgagePayment = calculateMortgagePayment(loanBalance, v.mortgageRatePct, 360);
+      const mortgageMonthlyRate = annualPctToMonthlyRate(v.mortgageRatePct);
+      let buyStock = -(v.renovationCost + v.closingCost);
+
+      let annualMortgageInterest = 0;
+      let annualPropertyTaxPaid = 0;
+      let cumulativeRentExpenditure = 0;
+      let cumulativeBuyExpenditure = 0;
+
+      const years = [0];
+      const rentSeries = [rentStock];
+      const buySeries = [calculateNetSaleProceeds(homeValue, loanBalance) + buyStock];
+      const homeValueSeries = [homeValue];
+      const annualMaintenanceSeries = [monthlyMaintenance * 12];
+      const annualPropertyTaxSeries = [(v.propertyTaxPct / 100) * assessedValue];
+      const mortgageBalanceSeries = [loanBalance];
+      const annualInsuranceSeries = [monthlyInsurance * 12];
+      const rentExpenditureSeries = [cumulativeRentExpenditure];
+      const buyExpenditureSeries = [cumulativeBuyExpenditure];
+      const rentStockSeries = [rentStock];
+      const buyStockSeries = [buyStock];
+
+      for (let month = 1; month <= months; month += 1) {
+        const monthlyPropertyTax = (v.propertyTaxPct / 100) * assessedValue / 12;
+
+        annualPropertyTaxPaid += monthlyPropertyTax;
+        cumulativeRentExpenditure += monthlyRent;
+
+        // Allow drawdowns when housing costs exceed income instead of silently flooring at zero.
+        const rentInvestContribution = v.monthlyHousingAllocation - monthlyRent;
+        rentStock = rentStock * (1 + monthlyStockRate) + rentInvestContribution;
+
+        let currentMortgagePayment = 0;
+        if (loanBalance > 0 && month <= 360) {
+          const interest = loanBalance * mortgageMonthlyRate;
+          annualMortgageInterest += interest;
+          currentMortgagePayment = mortgagePayment;
+          let principal = Math.max(0, currentMortgagePayment - interest);
+          principal = Math.min(principal, loanBalance);
+          loanBalance = Math.max(0, loanBalance - principal);
+        }
+
+        cumulativeBuyExpenditure += currentMortgagePayment + monthlyPropertyTax + monthlyInsurance + monthlyHoaCost + monthlyMaintenance;
+
+        const buyInvestContribution =
+          v.monthlyHousingAllocation - currentMortgagePayment - monthlyPropertyTax - monthlyInsurance - monthlyHoaCost - monthlyMaintenance;
+        buyStock = buyStock * (1 + monthlyStockRate) + buyInvestContribution;
+
+        if (month % 12 === 0) {
+          // Annual tax refund on deductible mortgage interest and property taxes, invested in stocks
+          const taxRefund = (annualMortgageInterest + annualPropertyTaxPaid) * (v.taxBracketPct / 100);
+          buyStock += taxRefund;
+          annualMortgageInterest = 0;
+          annualPropertyTaxPaid = 0;
+
+          // Apply annual growth at year-end, before recording
+          monthlyRent *= annualRentFactor;
+          homeValue *= annualHomeFactor;
+          assessedValue *= annualAssessedFactor;
+          monthlyInsurance *= annualHousingInflationFactor;
+          monthlyHoaCost *= annualHousingInflationFactor;
+          monthlyMaintenance *= annualHousingInflationFactor;
+
+          years.push(month / 12);
+          rentSeries.push(rentStock);
+          buySeries.push(calculateNetSaleProceeds(homeValue, loanBalance) + buyStock);
+          homeValueSeries.push(homeValue);
+          annualMaintenanceSeries.push(monthlyMaintenance * 12);
+          annualPropertyTaxSeries.push((v.propertyTaxPct / 100) * assessedValue);
+          mortgageBalanceSeries.push(loanBalance);
+          annualInsuranceSeries.push(monthlyInsurance * 12);
+          rentExpenditureSeries.push(cumulativeRentExpenditure);
+          buyExpenditureSeries.push(cumulativeBuyExpenditure);
+          rentStockSeries.push(rentStock);
+          buyStockSeries.push(buyStock);
+        }
+      }
+
+      return {
+        years,
+        rentSeries,
+        buySeries,
+        supplementalSeries: {
+          homeValue: homeValueSeries,
+          annualMaintenance: annualMaintenanceSeries,
+          annualPropertyTax: annualPropertyTaxSeries,
+          mortgageBalance: mortgageBalanceSeries,
+          annualInsurance: annualInsuranceSeries,
+          cashFlowComparison: { rent: rentExpenditureSeries, buy: buyExpenditureSeries },
+          stockGainsComparison: { rent: rentStockSeries, buy: buyStockSeries }
+        }
+      };
+    }
+
+    function updateSummary(results) {
+      const rentFinal = results.rentSeries[results.rentSeries.length - 1];
+      const buyFinal = results.buySeries[results.buySeries.length - 1];
+      const delta = buyFinal - rentFinal;
+
+      ui.rentFinal.textContent = currencyFmt.format(rentFinal);
+      ui.buyFinal.textContent = currencyFmt.format(buyFinal);
+      ui.deltaFinal.textContent = `${delta >= 0 ? "+" : ""}${currencyFmt.format(delta)}`;
+
+      const winner = delta > 0 ? "Buy" : delta < 0 ? "Rent" : "Tie";
+      const absDelta = Math.abs(delta);
+
+      if (winner === "Tie") {
+        ui.winnerText.textContent = "Final outcome: Tie. Both paths end with the same net worth.";
+      } else {
+        ui.winnerText.textContent = `Final outcome: ${winner} leads by ${currencyFmt.format(absDelta)}.`;
+      }
+    }
+
+    function showPointDetails(year, rentValue, buyValue) {
+      const lead = buyValue - rentValue;
+      const leader = lead > 0 ? "Buy" : lead < 0 ? "Rent" : "Neither";
+      ui.pointDetails.textContent = `Year ${year}: Rent = ${currencyFmt.format(rentValue)}, Buy = ${currencyFmt.format(buyValue)}. Leader: ${leader}.`;
+    }
+
+    function showDifferencePointDetails(year, differenceValue) {
+      const leader = differenceValue > 0 ? "Buy" : differenceValue < 0 ? "Rent" : "Neither";
+      ui.differencePointDetails.textContent = `Year ${year}: Difference (Buy - Rent) = ${currencyFmt.format(differenceValue)}. Leader: ${leader}.`;
+    }
+
+    function showSupplementalPointDetails(year, metricKey, value) {
+      const config = SUPPLEMENTAL_PLOT_CONFIG[metricKey];
+      ui.supplementalPointDetails.textContent = `Year ${year}: ${config.detailLabel} = ${currencyFmt.format(value)}.`;
+    }
+
+    function renderChart(results) {
+      latestResults = results;
+      const data = {
+        labels: results.years,
+        datasets: [
+          {
+            label: "Rent + Invest Net Worth",
+            data: results.rentSeries,
+            borderColor: "#1d7a58",
+            backgroundColor: "rgba(29, 122, 88, 0.18)",
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.2
+          },
+          {
+            label: "Buy + Invest Net Worth",
+            data: results.buySeries,
+            borderColor: "#c17a10",
+            backgroundColor: "rgba(193, 122, 16, 0.2)",
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.2
+          }
+        ]
+      };
+
+      if (chart) {
+        chart.data = data;
+        chart.update("none");
+      } else {
+        chart = new Chart(ui.chartCanvas, {
+          type: "line",
+          data,
+          options: {
+            animation: false,
+            transitions: {
+              active: {
+                animation: {
+                  duration: 0
+                }
+              }
+            },
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
+            interaction: { mode: "nearest", intersect: false },
+            onHover: (evt, activeElements) => {
+              if (!latestResults || !activeElements.length) return;
+              const idx = activeElements[0].index;
+              showPointDetails(latestResults.years[idx], latestResults.rentSeries[idx], latestResults.buySeries[idx]);
+            },
+            plugins: {
+              legend: { labels: { usePointStyle: true } },
+              tooltip: {
+                callbacks: {
+                  title: (items) => `Year ${items[0].label}`,
+                  label: (ctx) => `${ctx.dataset.label}: ${currencyFmt.format(ctx.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: "Year" } },
+              y: {
+                title: { display: true, text: "Net Worth" },
+                ticks: { callback: (val) => currencyFmt.format(val) }
+              }
+            }
+          }
+        });
+
+        ui.chartCanvas.onclick = (evt) => {
+          if (!chart || !latestResults) return;
+          const points = chart.getElementsAtEventForMode(evt, "nearest", { intersect: true }, true);
+          if (!points.length) return;
+          const idx = points[0].index;
+          showPointDetails(latestResults.years[idx], latestResults.rentSeries[idx], latestResults.buySeries[idx]);
+        };
+      }
+
+      const lastIndex = results.years.length - 1;
+      showPointDetails(results.years[lastIndex], results.rentSeries[lastIndex], results.buySeries[lastIndex]);
+      renderDifferenceChart(results);
+      renderSupplementalChart(results);
+    }
+
+    function renderDifferenceChart(results) {
+      const differenceSeries = buildDifferenceSeries(results);
+      const data = {
+        labels: results.years,
+        datasets: [
+          {
+            label: "Net Worth Difference (Buy - Rent)",
+            data: differenceSeries,
+            borderColor: "#234fdd",
+            backgroundColor: "rgba(35, 79, 221, 0.18)",
+            borderWidth: 3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.2
+          },
+          {
+            label: "Break-even",
+            data: results.years.map(() => 0),
+            borderColor: "#8b9a92",
+            borderDash: [6, 4],
+            borderWidth: 1,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            fill: false
+          }
+        ]
+      };
+
+      if (differenceChart) {
+        differenceChart.data = data;
+        differenceChart.update("none");
+      } else {
+        differenceChart = new Chart(ui.differenceChartCanvas, {
+          type: "line",
+          data,
+          options: {
+            animation: false,
+            transitions: {
+              active: {
+                animation: {
+                  duration: 0
+                }
+              }
+            },
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
+            interaction: { mode: "nearest", intersect: false },
+            onHover: (evt, activeElements) => {
+              if (!latestResults || !activeElements.length) return;
+              const idx = activeElements[0].index;
+              const diff = latestResults.buySeries[idx] - latestResults.rentSeries[idx];
+              showDifferencePointDetails(latestResults.years[idx], diff);
+            },
+            plugins: {
+              legend: { labels: { usePointStyle: true } },
+              tooltip: {
+                callbacks: {
+                  title: (items) => `Year ${items[0].label}`,
+                  label: (ctx) => `${ctx.dataset.label}: ${currencyFmt.format(ctx.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: "Year" } },
+              y: {
+                title: { display: true, text: "Difference" },
+                ticks: { callback: (val) => currencyFmt.format(val) }
+              }
+            }
+          }
+        });
+
+        ui.differenceChartCanvas.onclick = (evt) => {
+          if (!differenceChart || !latestResults) return;
+          const points = differenceChart.getElementsAtEventForMode(evt, "nearest", { intersect: true }, true);
+          if (!points.length) return;
+          const idx = points[0].index;
+          const diff = latestResults.buySeries[idx] - latestResults.rentSeries[idx];
+          showDifferencePointDetails(latestResults.years[idx], diff);
+        };
+      }
+
+      const lastIndex = results.years.length - 1;
+      showDifferencePointDetails(results.years[lastIndex], differenceSeries[lastIndex]);
+    }
+
+    function renderSupplementalChart(results) {
+      const metricKey = getSelectedSupplementalMetric();
+      const config = SUPPLEMENTAL_PLOT_CONFIG[metricKey];
+      ui.supplementalChartTitle.textContent = config.title;
+
+      let data;
+      if (config.isTwoSeries) {
+        const metricData = results.supplementalSeries[metricKey];
+        data = {
+          labels: results.years,
+          datasets: [
+            {
+              label: config.series1.label,
+              data: metricData.rent,
+              borderColor: config.series1.borderColor,
+              backgroundColor: config.series1.backgroundColor,
+              borderWidth: 3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.2
+            },
+            {
+              label: config.series2.label,
+              data: metricData.buy,
+              borderColor: config.series2.borderColor,
+              backgroundColor: config.series2.backgroundColor,
+              borderWidth: 3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.2
+            }
+          ]
+        };
+      } else {
+        const metricSeries = results.supplementalSeries[metricKey];
+        data = {
+          labels: results.years,
+          datasets: [
+            {
+              label: config.datasetLabel,
+              data: metricSeries,
+              borderColor: config.borderColor,
+              backgroundColor: config.backgroundColor,
+              borderWidth: 3,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.2
+            }
+          ]
+        };
+      }
+
+      if (supplementalChart) {
+        supplementalChart.data = data;
+        supplementalChart.options.scales.y.title.text = config.axisTitle;
+        supplementalChart.update("none");
+      } else {
+        supplementalChart = new Chart(ui.supplementalChartCanvas, {
+          type: "line",
+          data,
+          options: {
+            animation: false,
+            transitions: {
+              active: {
+                animation: {
+                  duration: 0
+                }
+              }
+            },
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.8,
+            interaction: { mode: "nearest", intersect: false },
+            onHover: (evt, activeElements) => {
+              if (!latestResults || !activeElements.length) return;
+              const idx = activeElements[0].index;
+              const selectedMetric = getSelectedSupplementalMetric();
+              const selectedConfig = SUPPLEMENTAL_PLOT_CONFIG[selectedMetric];
+              if (selectedConfig.isTwoSeries) {
+                const metricData = latestResults.supplementalSeries[selectedMetric];
+                const seriesLabel = activeElements[0].datasetIndex === 0 ? "Rent" : "Buy";
+                const value = activeElements[0].datasetIndex === 0 ? metricData.rent[idx] : metricData.buy[idx];
+                ui.supplementalPointDetails.textContent = `Year ${latestResults.years[idx]}: ${seriesLabel} ${selectedConfig.detailLabel} = ${currencyFmt.format(value)}.`;
+              } else {
+                showSupplementalPointDetails(latestResults.years[idx], selectedMetric, latestResults.supplementalSeries[selectedMetric][idx]);
+              }
+            },
+            plugins: {
+              legend: { labels: { usePointStyle: true } },
+              tooltip: {
+                callbacks: {
+                  title: (items) => `Year ${items[0].label}`,
+                  label: (ctx) => `${ctx.dataset.label}: ${currencyFmt.format(ctx.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              x: { title: { display: true, text: "Year" } },
+              y: {
+                title: { display: true, text: config.axisTitle },
+                ticks: { callback: (val) => currencyFmt.format(val) }
+              }
+            }
+          }
+        });
+
+        ui.supplementalChartCanvas.onclick = (evt) => {
+          if (!supplementalChart || !latestResults) return;
+          const points = supplementalChart.getElementsAtEventForMode(evt, "nearest", { intersect: true }, true);
+          if (!points.length) return;
+          const idx = points[0].index;
+          const selectedMetric = getSelectedSupplementalMetric();
+          const config = SUPPLEMENTAL_PLOT_CONFIG[selectedMetric];
+          if (config.isTwoSeries) {
+            const metricData = latestResults.supplementalSeries[selectedMetric];
+            const seriesLabel = points[0].datasetIndex === 0 ? "Rent" : "Buy";
+            const value = points[0].datasetIndex === 0 ? metricData.rent[idx] : metricData.buy[idx];
+            ui.supplementalPointDetails.textContent = `Year ${latestResults.years[idx]}: ${seriesLabel} ${config.detailLabel} = ${currencyFmt.format(value)}.`;
+          } else {
+            showSupplementalPointDetails(latestResults.years[idx], selectedMetric, latestResults.supplementalSeries[selectedMetric][idx]);
+          }
+        };
+      }
+
+      const lastIndex = results.years.length - 1;
+      const selectedMetric = getSelectedSupplementalMetric();
+      const lastConfig = SUPPLEMENTAL_PLOT_CONFIG[selectedMetric];
+      if (lastConfig.isTwoSeries) {
+        const metricData = results.supplementalSeries[selectedMetric];
+        ui.supplementalPointDetails.textContent = `Year ${results.years[lastIndex]}: Rent ${lastConfig.detailLabel} = ${currencyFmt.format(metricData.rent[lastIndex])}, Buy ${lastConfig.detailLabel} = ${currencyFmt.format(metricData.buy[lastIndex])}.`;
+      } else {
+        showSupplementalPointDetails(results.years[lastIndex], selectedMetric, results.supplementalSeries[selectedMetric][lastIndex]);
+      }
+    }
+
+    function reportRunMeta(v) {
+      ui.statusText.textContent = `Simulation complete: ${v.years} years, stock growth ${percentFmt.format(v.stockGrowthPct / 100)}, mortgage rate ${percentFmt.format(v.mortgageRatePct / 100)}.`;
+    }
+
+    function saveInputs() {
+      const data = {};
+      fieldConfig.forEach((field) => {
+        const input = document.getElementById(`field-${field.key}`);
+        if (!input) return;
+        data[field.key] = parseInputValue(input.value);
+      });
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rent_vs_buy_inputs.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildLoadedInputValues(data) {
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Loaded input file must contain an object.");
+      }
+
+      const loadedData = { ...data };
+      if (!("monthlyHousingAllocation" in loadedData) && ("monthlyIncome" in loadedData)) {
+        loadedData.monthlyHousingAllocation = loadedData.monthlyIncome;
+      }
+
+      if (!("annualMaintenance" in loadedData) && ("yearlyMaintenancePct" in loadedData)) {
+        const purchasePrice = parseInputValue(loadedData.purchasePrice);
+        const yearlyMaintenancePct = parseInputValue(loadedData.yearlyMaintenancePct);
+        if (Number.isFinite(purchasePrice) && purchasePrice >= 0 && Number.isFinite(yearlyMaintenancePct) && yearlyMaintenancePct >= 0) {
+          loadedData.annualMaintenance = purchasePrice * yearlyMaintenancePct / 100;
+        }
+      }
+
+      const values = {};
+      fieldConfig.forEach((field) => {
+        if (!(field.key in loadedData)) {
+          throw new Error(`Missing input: ${field.key}`);
+        }
+        const value = parseInputValue(loadedData[field.key]);
+        if (!Number.isFinite(value)) {
+          throw new Error(`Invalid input: ${field.key}`);
+        }
+        values[field.key] = value;
+      });
+
+      const validation = validateInputs(values);
+      if (!validation.valid) {
+        throw new Error("Loaded input values failed validation.");
+      }
+
+      return values;
+    }
+
+    function applyLoadedInputs(data) {
+      const values = buildLoadedInputValues(data);
+      fieldConfig.forEach((field) => {
+        const input = document.getElementById(`field-${field.key}`);
+        if (!input) return;
+        setInputDisplayValue(field, input, values[field.key]);
+      });
+    }
+
+    createFields();
+
+    document.getElementById("saveBtn").addEventListener("click", saveInputs);
+
+    document.getElementById("loadBtn").addEventListener("click", () => {
+      document.getElementById("loadFileInput").click();
+    });
+
+    ui.plotMetricSelect.addEventListener("change", () => {
+      if (!latestResults) return;
+      renderSupplementalChart(latestResults);
+      ui.statusText.textContent = `Plot updated: ${SUPPLEMENTAL_PLOT_CONFIG[getSelectedSupplementalMetric()].title}.`;
+    });
+
+    document.getElementById("loadFileInput").addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          applyLoadedInputs(data);
+          if (!maybeRunSimulation()) {
+            ui.statusText.textContent = "Inputs loaded. Fix highlighted inputs to update the simulation.";
+          }
+        } catch {
+          ui.statusText.textContent = "Could not load file. Make sure it is a valid inputs JSON file.";
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    });
+
+    ui.form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      maybeRunSimulation();
+    });
+
+    maybeRunSimulation();
+  </script>
+</body>
+</html>

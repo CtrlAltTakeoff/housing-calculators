@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mortgage Calculator</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255, 251, 245, 0.88);
+      --panel-strong: #fffaf2;
+      --ink: #1e2430;
+      --muted: #635d55;
+      --line: rgba(94, 76, 52, 0.18);
+      --accent: #b3562d;
+      --accent-soft: #f1d5b8;
+      --teal: #2b7a78;
+      --gold: #d99b2b;
+      --shadow: 0 22px 55px rgba(68, 46, 26, 0.12);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(217, 155, 43, 0.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(43, 122, 120, 0.18), transparent 34%),
+        linear-gradient(180deg, #f7f1e9 0%, #f1e6d7 100%);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1200px, calc(100% - 32px));
+      margin: 32px auto 48px;
+    }
+
+    .hero {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 6px);
+      background: linear-gradient(135deg, rgba(255, 250, 242, 0.92), rgba(249, 240, 228, 0.8));
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 3vw, 3.4rem);
+      line-height: 0.98;
+      font-weight: 700;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .assumption-note {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(94, 76, 52, 0.16);
+      background: rgba(255, 255, 255, 0.56);
+    }
+
+    .assumption-note h2 {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+    }
+
+    .assumption-note ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 400px) 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .form-panel {
+      padding: 22px;
+      position: sticky;
+      top: 24px;
+    }
+
+    .section-title {
+      margin: 0 0 6px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--accent);
+    }
+
+    .section-copy {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-size: 0.92rem;
+      color: var(--ink);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 14px;
+      border: 1px solid rgba(94, 76, 52, 0.22);
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--ink);
+      font: inherit;
+    }
+
+    input:focus {
+      outline: 2px solid rgba(179, 86, 45, 0.24);
+      border-color: var(--accent);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 18px;
+      font: 600 0.95rem/1 inherit;
+      cursor: pointer;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fffaf4;
+      flex: 1;
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid rgba(94, 76, 52, 0.22);
+    }
+
+    .error-box {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(179, 40, 40, 0.08);
+      border: 1px solid rgba(179, 40, 40, 0.18);
+      color: #7b1f1f;
+      line-height: 1.5;
+    }
+
+    .test-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(94, 76, 52, 0.16);
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .test-box h2 {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+    }
+
+    .test-box p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .test-results {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+      font-size: 0.92rem;
+    }
+
+    .test-result {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(94, 76, 52, 0.12);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .test-result.pass {
+      border-color: rgba(43, 122, 120, 0.26);
+      background: rgba(43, 122, 120, 0.08);
+    }
+
+    .test-result.fail {
+      border-color: rgba(179, 40, 40, 0.24);
+      background: rgba(179, 40, 40, 0.08);
+      color: #7b1f1f;
+    }
+
+    .results {
+      display: grid;
+      gap: 24px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      padding: 18px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .card h2,
+    .summary-card h2,
+    .chart-panel h2,
+    .table-panel h2 {
+      margin: 0 0 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+    }
+
+    .metric {
+      margin: 0;
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1.08;
+    }
+
+    .card p,
+    .summary-card p,
+    .chart-panel p,
+    .table-panel p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .summary-card,
+    .chart-panel,
+    .table-panel {
+      padding: 20px;
+    }
+
+    .summary-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .summary-card li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(94, 76, 52, 0.12);
+    }
+
+    .summary-card li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .summary-card strong {
+      font-size: 1.06rem;
+    }
+
+    .chart-wrap {
+      margin-top: 16px;
+      border-radius: 18px;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(247, 238, 226, 0.95));
+      border: 1px solid rgba(94, 76, 52, 0.12);
+    }
+
+    canvas {
+      width: 100%;
+      height: 360px;
+      display: block;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      color: var(--muted);
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend i {
+      width: 12px;
+      height: 12px;
+      display: inline-block;
+      border-radius: 999px;
+    }
+
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .toggle-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(94, 76, 52, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.65);
+      font-size: 0.94rem;
+    }
+
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .table-scroll {
+      margin-top: 16px;
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(94, 76, 52, 0.12);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 14px 12px;
+      text-align: right;
+      border-bottom: 1px solid rgba(94, 76, 52, 0.1);
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #fbf4ea;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(241, 229, 209, 0.24);
+    }
+
+    .footnote {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      .layout,
+      .cards,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-panel {
+        position: static;
+      }
+
+      canvas {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <p class="eyebrow">Fixed-Rate Mortgage Planner</p>
+      <h1>See the true monthly cost before you borrow.</h1>
+      <p>
+        Estimate your mortgage payment, property tax, insurance, HOA, first-year totals, and a full yearly amortization breakdown in one view.
+      </p>
+      <div class="assumption-note">
+        <h2>Hardcoded Assumptions</h2>
+        <ul>
+          <li>Property tax is based on assessed home value, which increases by 1% per year.</li>
+          <li>Home insurance increases by 2% per year due to inflation.</li>
+          <li>Monthly HOA increases by 2% per year due to inflation.</li>
+          <li>These annual growth rates are fixed assumptions in this version and are not user inputs.</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="panel form-panel">
+        <p class="section-title">Loan Inputs</p>
+        <p class="section-copy">Enter the home price, financing terms, and recurring property costs to generate the full estimate.</p>
+
+        <form id="calculator-form" novalidate>
+          <label>
+            Home Price (USD)
+            <input id="homePrice" name="homePrice" type="text" inputmode="numeric" value="600,000" required>
+          </label>
+
+          <label>
+            Down Payment (USD)
+            <input id="downPayment" name="downPayment" type="text" inputmode="numeric" value="120,000" required>
+          </label>
+
+          <label>
+            Annual Interest Rate (%)
+            <input id="annualInterestRate" name="annualInterestRate" type="number" min="0" step="0.01" value="6.75" required>
+          </label>
+
+          <label>
+            Loan Term (Years)
+            <input id="loanTermYears" name="loanTermYears" type="number" min="1" step="1" value="30" required>
+          </label>
+
+          <label>
+            Annual Property Tax Rate (%)
+            <input id="propertyTaxRate" name="propertyTaxRate" type="number" min="0" step="0.01" value="1.2" required>
+          </label>
+
+          <label>
+            Annual Home Insurance (USD)
+            <input id="annualInsurance" name="annualInsurance" type="text" inputmode="numeric" value="1,800" required>
+          </label>
+
+          <label>
+            Monthly HOA (USD)
+            <input id="monthlyHoa" name="monthlyHoa" type="text" inputmode="numeric" value="450" required>
+          </label>
+
+          <div class="actions">
+            <button class="primary" type="submit">Calculate</button>
+            <button class="secondary" type="button" id="reset-button">Reset</button>
+          </div>
+        </form>
+
+        <div class="error-box" id="error-box" aria-live="polite"></div>
+
+        <section class="test-box" aria-live="polite">
+          <h2>Sanity Tests</h2>
+          <p>Run a few deterministic checks against the mortgage math and yearly cost assumptions.</p>
+          <button class="secondary" type="button" id="run-tests-button">Run Sanity Tests</button>
+          <div class="test-results" id="test-results"></div>
+        </section>
+      </aside>
+
+      <main class="results">
+        <section class="cards">
+          <article class="card">
+            <h2>Monthly Mortgage</h2>
+            <p class="metric" id="monthlyMortgage">$0</p>
+            <p>Principal and interest only.</p>
+          </article>
+
+          <article class="card">
+            <h2>Monthly Tax, Year 1</h2>
+            <p class="metric" id="monthlyTax">$0</p>
+            <p>Based on annual property tax rate and first-year assessed value.</p>
+          </article>
+
+          <article class="card">
+            <h2>Monthly Insurance, Year 1</h2>
+            <p class="metric" id="monthlyInsurance">$0</p>
+            <p>First-year annual premium divided across 12 months.</p>
+          </article>
+
+          <article class="card">
+            <h2>Monthly HOA, Year 1</h2>
+            <p class="metric" id="monthlyHoaResult">$0</p>
+            <p>First-year HOA payment before annual inflation increases.</p>
+          </article>
+
+          <article class="card">
+            <h2>Total Monthly Cost, Year 1</h2>
+            <p class="metric" id="totalMonthlyCost">$0</p>
+            <p>First-year mortgage, tax, insurance, and HOA combined.</p>
+          </article>
+        </section>
+
+        <section class="summary-grid">
+          <article class="panel summary-card">
+            <h2>First-Year Summary</h2>
+            <ul id="firstYearSummary"></ul>
+          </article>
+
+          <article class="panel summary-card">
+            <h2>Loan Snapshot</h2>
+            <ul id="loanSnapshot"></ul>
+          </article>
+        </section>
+
+        <section class="panel chart-panel">
+          <h2>Stacked Cost View</h2>
+          <p>Each bar shows one year of housing costs, with selectable cost layers stacked together.</p>
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="radio" name="stackedViewMode" value="yearly" checked>
+              Yearly Amount
+            </label>
+            <label class="toggle">
+              <input type="radio" name="stackedViewMode" value="monthly">
+              Monthly Amount
+            </label>
+          </div>
+          <div class="toggle-grid" id="stackedCostToggles">
+            <label class="toggle">
+              <input type="checkbox" name="stackedCostComponent" value="principalAmount" checked>
+              Principal
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="stackedCostComponent" value="interestAmount" checked>
+              Loan Cost
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="stackedCostComponent" value="taxAmount">
+              Property Tax
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="stackedCostComponent" value="insuranceAmount">
+              Home Insurance
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="stackedCostComponent" value="hoaAmount">
+              HOA
+            </label>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="amortizationChart" width="900" height="360" aria-label="Stacked principal and interest chart"></canvas>
+          </div>
+          <div class="legend" id="stackedLegend"></div>
+          <p class="footnote" id="chartFootnote"></p>
+        </section>
+
+        <section class="panel chart-panel">
+          <h2>Total Cost Builder</h2>
+          <p>Select which cost components should be included in the running total paid over time.</p>
+          <div class="toggle-grid" id="totalCostToggles">
+            <label class="toggle">
+              <input type="checkbox" name="totalCostComponent" value="principalPaid" checked>
+              Principal
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="totalCostComponent" value="interestPaid" checked>
+              Loan Cost
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="totalCostComponent" value="annualTax" checked>
+              Property Tax
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="totalCostComponent" value="annualInsurance" checked>
+              Home Insurance
+            </label>
+            <label class="toggle">
+              <input type="checkbox" name="totalCostComponent" value="annualHoa" checked>
+              HOA
+            </label>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="totalCostChart" width="900" height="360" aria-label="Selected total cost over time chart"></canvas>
+          </div>
+          <p class="footnote" id="totalCostFootnote"></p>
+        </section>
+
+        <section class="panel table-panel">
+          <h2>Yearly Amortization Table</h2>
+          <p>Annual totals across the full term, including taxes and insurance.</p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th>Assessed Value</th>
+                  <th>Principal</th>
+                  <th>Interest</th>
+                  <th>Property Tax</th>
+                  <th>Insurance</th>
+                  <th>HOA</th>
+                  <th>Total Annual Cost</th>
+                  <th>Ending Balance</th>
+                </tr>
+              </thead>
+              <tbody id="amortizationTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const currencyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    });
+
+    const percentFormatter = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    const defaultValues = {
+      homePrice: 600000,
+      downPayment: 120000,
+      annualInterestRate: 6.75,
+      loanTermYears: 30,
+      propertyTaxRate: 1.2,
+      annualInsurance: 1800,
+      monthlyHoa: 450
+    };
+
+    const form = document.getElementById("calculator-form");
+    const resetButton = document.getElementById("reset-button");
+    const runTestsButton = document.getElementById("run-tests-button");
+    const errorBox = document.getElementById("error-box");
+    const testResults = document.getElementById("test-results");
+    const tableBody = document.getElementById("amortizationTableBody");
+    const chartCanvas = document.getElementById("amortizationChart");
+    const chartFootnote = document.getElementById("chartFootnote");
+    const stackedLegend = document.getElementById("stackedLegend");
+    const totalCostCanvas = document.getElementById("totalCostChart");
+    const totalCostFootnote = document.getElementById("totalCostFootnote");
+    const stackedViewInputs = Array.from(document.querySelectorAll('input[name="stackedViewMode"]'));
+    const stackedCostInputs = Array.from(document.querySelectorAll('input[name="stackedCostComponent"]'));
+    const totalCostInputs = Array.from(document.querySelectorAll('input[name="totalCostComponent"]'));
+    const formattedCurrencyInputs = ["homePrice", "downPayment", "annualInsurance", "monthlyHoa"].map((id) => document.getElementById(id));
+    let latestCalculation = null;
+    let latestValues = null;
+    let selectedStackedBarYear = null;
+    let selectedTotalCostPointYear = null;
+    const stackedComponentConfig = {
+      principalAmount: { label: "Principal", color: "#2b7a78" },
+      interestAmount: { label: "Loan Cost", color: "#d99b2b" },
+      taxAmount: { label: "Property Tax", color: "#4d6c9c" },
+      insuranceAmount: { label: "Home Insurance", color: "#b3562d" },
+      hoaAmount: { label: "HOA", color: "#7f8c3a" }
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      renderFromForm();
+    });
+
+    resetButton.addEventListener("click", () => {
+      Object.entries(defaultValues).forEach(([key, value]) => {
+        setFormFieldValue(key, value);
+      });
+      renderFromForm();
+    });
+
+    runTestsButton.addEventListener("click", () => {
+      renderTestResults(runSanityTests());
+    });
+
+    formattedCurrencyInputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        formatCurrencyInput(input);
+      });
+    });
+
+    stackedViewInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        if (latestCalculation) {
+          selectedStackedBarYear = null;
+          drawChart(latestCalculation.yearlyRows);
+          updateChartFootnote();
+        }
+      });
+    });
+
+    stackedCostInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        if (latestCalculation) {
+          selectedStackedBarYear = null;
+          drawChart(latestCalculation.yearlyRows);
+          updateChartFootnote();
+        }
+      });
+    });
+
+    totalCostInputs.forEach((input) => {
+      input.addEventListener("change", () => {
+        if (latestCalculation) {
+          selectedTotalCostPointYear = null;
+          renderTotalCostChart(latestCalculation.yearlyRows);
+        }
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      if (latestCalculation) {
+        drawChart(latestCalculation.yearlyRows);
+        renderTotalCostChart(latestCalculation.yearlyRows);
+      }
+    });
+
+    chartCanvas.addEventListener("click", (event) => {
+      if (!latestCalculation) {
+        return;
+      }
+
+      const chartRows = getStackedChartSeries(latestCalculation.yearlyRows);
+      const hit = getStackedBarHit(event, chartCanvas, chartRows);
+      selectedStackedBarYear = hit ? hit.year : null;
+      drawChart(latestCalculation.yearlyRows);
+    });
+
+    totalCostCanvas.addEventListener("click", (event) => {
+      if (!latestCalculation) {
+        return;
+      }
+
+      const { series } = getTotalCostSeries(latestCalculation.yearlyRows);
+      const hit = getLinePointHit(event, totalCostCanvas, series);
+      selectedTotalCostPointYear = hit ? hit.year : null;
+      renderTotalCostChart(latestCalculation.yearlyRows);
+    });
+
+    function getStackedViewMode() {
+      const selected = stackedViewInputs.find((input) => input.checked);
+      return selected ? selected.value : "yearly";
+    }
+
+    function getSelectedStackedComponents() {
+      return stackedCostInputs.filter((input) => input.checked).map((input) => input.value);
+    }
+
+    function getFormValues() {
+      return {
+        homePrice: parseFormattedNumber(form.elements.homePrice.value),
+        downPayment: parseFormattedNumber(form.elements.downPayment.value),
+        annualInterestRate: Number(form.elements.annualInterestRate.value),
+        loanTermYears: Number(form.elements.loanTermYears.value),
+        propertyTaxRate: Number(form.elements.propertyTaxRate.value),
+        annualInsurance: parseFormattedNumber(form.elements.annualInsurance.value),
+        monthlyHoa: parseFormattedNumber(form.elements.monthlyHoa.value)
+      };
+    }
+
+    function parseFormattedNumber(value) {
+      const normalized = String(value).replace(/,/g, "").trim();
+      return normalized ? Number(normalized) : 0;
+    }
+
+    function formatWholeNumber(value) {
+      const digits = String(value).replace(/[^\d]/g, "");
+      if (!digits) {
+        return "";
+      }
+
+      return new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: 0
+      }).format(Number(digits));
+    }
+
+    function formatCurrencyInput(input) {
+      input.value = formatWholeNumber(input.value);
+    }
+
+    function setFormFieldValue(name, value) {
+      if (["homePrice", "downPayment", "annualInsurance", "monthlyHoa"].includes(name)) {
+        form.elements[name].value = formatWholeNumber(value);
+        return;
+      }
+
+      form.elements[name].value = value;
+    }
+
+    function validateInputs(values) {
+      const errors = [];
+
+      if (!(values.homePrice > 0)) {
+        errors.push("Home price must be greater than 0.");
+      }
+
+      if (values.downPayment < 0) {
+        errors.push("Down payment must be 0 or greater.");
+      }
+
+      if (values.downPayment > values.homePrice) {
+        errors.push("Down payment cannot exceed the home price.");
+      }
+
+      if (values.annualInterestRate < 0) {
+        errors.push("Annual interest rate must be 0 or greater.");
+      }
+
+      if (!(values.loanTermYears > 0)) {
+        errors.push("Loan term must be greater than 0.");
+      }
+
+      if (values.propertyTaxRate < 0) {
+        errors.push("Property tax rate must be 0 or greater.");
+      }
+
+      if (values.annualInsurance < 0) {
+        errors.push("Annual home insurance must be 0 or greater.");
+      }
+
+      if (values.monthlyHoa < 0) {
+        errors.push("Monthly HOA must be 0 or greater.");
+      }
+
+      return errors;
+    }
+
+    function calculateMortgage(values) {
+      const loanAmount = values.homePrice - values.downPayment;
+      const monthlyRate = values.annualInterestRate / 100 / 12;
+      const numberOfPayments = values.loanTermYears * 12;
+      const firstYearAnnualTax = values.homePrice * (values.propertyTaxRate / 100);
+      const firstYearMonthlyTax = firstYearAnnualTax / 12;
+      const firstYearMonthlyInsurance = values.annualInsurance / 12;
+      const firstYearMonthlyHoa = values.monthlyHoa;
+      const assessedValueGrowthRate = 0.01;
+      const insuranceGrowthRate = 0.02;
+      const hoaGrowthRate = 0.02;
+
+      let monthlyMortgage;
+      if (monthlyRate === 0) {
+        monthlyMortgage = loanAmount / numberOfPayments;
+      } else {
+        monthlyMortgage =
+          loanAmount *
+          (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+          (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+      }
+
+      let balance = loanAmount;
+      const yearlyRows = [];
+
+      for (let year = 1; year <= values.loanTermYears; year += 1) {
+        let principalPaid = 0;
+        let interestPaid = 0;
+
+        for (let month = 0; month < 12; month += 1) {
+          let interestPayment = monthlyRate === 0 ? 0 : balance * monthlyRate;
+          let principalPayment = monthlyMortgage - interestPayment;
+
+          if (principalPayment > balance) {
+            principalPayment = balance;
+            interestPayment = monthlyMortgage - principalPayment;
+          }
+
+          balance = Math.max(0, balance - principalPayment);
+          principalPaid += principalPayment;
+          interestPaid += interestPayment;
+
+          if (balance <= 0) {
+            break;
+          }
+        }
+
+        const assessedValue = values.homePrice * Math.pow(1 + assessedValueGrowthRate, year - 1);
+        const annualTax = assessedValue * (values.propertyTaxRate / 100);
+        const annualInsurance = values.annualInsurance * Math.pow(1 + insuranceGrowthRate, year - 1);
+        const annualHoa = values.monthlyHoa * 12 * Math.pow(1 + hoaGrowthRate, year - 1);
+        const totalAnnualCost = principalPaid + interestPaid + annualTax + annualInsurance + annualHoa;
+
+        yearlyRows.push({
+          year,
+          assessedValue,
+          principalPaid,
+          interestPaid,
+          annualTax,
+          annualInsurance,
+          annualHoa,
+          totalAnnualCost,
+          endingBalance: balance
+        });
+
+        if (balance <= 0) {
+          break;
+        }
+      }
+
+      const firstYear = yearlyRows[0];
+      const totalMonthlyCost = monthlyMortgage + firstYearMonthlyTax + firstYearMonthlyInsurance + firstYearMonthlyHoa;
+      const totalInterest = yearlyRows.reduce((sum, row) => sum + row.interestPaid, 0);
+      const totalPrincipal = yearlyRows.reduce((sum, row) => sum + row.principalPaid, 0);
+      const lifetimeHousingCost =
+        totalPrincipal +
+        totalInterest +
+        yearlyRows.reduce((sum, row) => sum + row.annualTax + row.annualInsurance + row.annualHoa, 0);
+
+      return {
+        loanAmount,
+        monthlyMortgage,
+        monthlyTax: firstYearMonthlyTax,
+        monthlyInsurance: firstYearMonthlyInsurance,
+        monthlyHoa: firstYearMonthlyHoa,
+        totalMonthlyCost,
+        yearlyRows,
+        firstYear,
+        totalInterest,
+        totalPrincipal,
+        lifetimeHousingCost
+      };
+    }
+
+    function renderError(messages) {
+      if (!messages.length) {
+        errorBox.style.display = "none";
+        errorBox.innerHTML = "";
+        return;
+      }
+
+      errorBox.style.display = "block";
+      errorBox.innerHTML = messages.map((message) => `<div>${message}</div>`).join("");
+    }
+
+    function renderSummary(calculation, values) {
+      document.getElementById("monthlyMortgage").textContent = currencyFormatter.format(calculation.monthlyMortgage);
+      document.getElementById("monthlyTax").textContent = currencyFormatter.format(calculation.monthlyTax);
+      document.getElementById("monthlyInsurance").textContent = currencyFormatter.format(calculation.monthlyInsurance);
+      document.getElementById("monthlyHoaResult").textContent = currencyFormatter.format(calculation.monthlyHoa);
+      document.getElementById("totalMonthlyCost").textContent = currencyFormatter.format(calculation.totalMonthlyCost);
+
+      const firstYearSummary = document.getElementById("firstYearSummary");
+      firstYearSummary.innerHTML = [
+        ["Total paid in year 1", calculation.firstYear.totalAnnualCost],
+        ["Principal paid in year 1", calculation.firstYear.principalPaid],
+        ["Interest paid in year 1", calculation.firstYear.interestPaid],
+        ["Property tax paid in year 1", calculation.firstYear.annualTax],
+        ["Home insurance paid in year 1", calculation.firstYear.annualInsurance],
+        ["HOA paid in year 1", calculation.firstYear.annualHoa]
+      ]
+        .map(
+          ([label, amount]) =>
+            `<li><span>${label}</span><strong>${currencyFormatter.format(amount)}</strong></li>`
+        )
+        .join("");
+
+      const loanSnapshot = document.getElementById("loanSnapshot");
+      loanSnapshot.innerHTML = [
+        ["Loan amount", calculation.loanAmount],
+        ["Loan term", `${values.loanTermYears} years`],
+        ["Interest rate", `${percentFormatter.format(values.annualInterestRate)}%`],
+        ["Total interest over loan", calculation.totalInterest],
+        ["Lifetime housing cost", calculation.lifetimeHousingCost]
+      ]
+        .map(([label, value]) => {
+          const displayValue = typeof value === "number" ? currencyFormatter.format(value) : value;
+          return `<li><span>${label}</span><strong>${displayValue}</strong></li>`;
+        })
+        .join("");
+    }
+
+    function renderTable(yearlyRows) {
+      tableBody.innerHTML = yearlyRows
+        .map((row) => `
+          <tr>
+            <td>${row.year}</td>
+            <td>${currencyFormatter.format(row.assessedValue)}</td>
+            <td>${currencyFormatter.format(row.principalPaid)}</td>
+            <td>${currencyFormatter.format(row.interestPaid)}</td>
+            <td>${currencyFormatter.format(row.annualTax)}</td>
+            <td>${currencyFormatter.format(row.annualInsurance)}</td>
+            <td>${currencyFormatter.format(row.annualHoa)}</td>
+            <td>${currencyFormatter.format(row.totalAnnualCost)}</td>
+            <td>${currencyFormatter.format(row.endingBalance)}</td>
+          </tr>
+        `)
+        .join("");
+    }
+
+    function configureCanvas(canvas) {
+      const context = canvas.getContext("2d");
+      const ratio = window.devicePixelRatio || 1;
+      const cssWidth = canvas.clientWidth;
+      const cssHeight = canvas.clientHeight;
+      const width = Math.floor(cssWidth * ratio);
+      const height = Math.floor(cssHeight * ratio);
+
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, cssWidth, cssHeight);
+
+      return { context, cssWidth, cssHeight };
+    }
+
+    function getStackedChartSeries(yearlyRows) {
+      const mode = getStackedViewMode();
+      const divisor = mode === "monthly" ? 12 : 1;
+      const selectedComponents = getSelectedStackedComponents();
+
+      return yearlyRows.map((row) => ({
+        year: row.year,
+        principalAmount: row.principalPaid / divisor,
+        interestAmount: row.interestPaid / divisor,
+        taxAmount: row.annualTax / divisor,
+        insuranceAmount: row.annualInsurance / divisor,
+        hoaAmount: row.annualHoa / divisor,
+        selectedComponents
+      }));
+    }
+
+    function getCanvasPoint(event, canvas) {
+      const bounds = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top
+      };
+    }
+
+    function drawAnnotation(context, x, y, lines, color) {
+      context.save();
+      context.font = "12px Arial";
+
+      const paddingX = 10;
+      const lineHeight = 16;
+      const boxWidth = Math.max(...lines.map((line) => context.measureText(line).width)) + paddingX * 2;
+      const boxHeight = lines.length * lineHeight + 12;
+      const boxX = Math.min(x + 12, context.canvas.clientWidth - boxWidth - 8);
+      const boxY = Math.max(8, y - boxHeight - 12);
+
+      context.fillStyle = "rgba(30, 36, 48, 0.92)";
+      context.fillRect(boxX, boxY, boxWidth, boxHeight);
+      context.strokeStyle = color;
+      context.lineWidth = 2;
+      context.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+      context.fillStyle = "#fffaf4";
+      lines.forEach((line, index) => {
+        context.fillText(line, boxX + paddingX, boxY + 20 + index * lineHeight);
+      });
+
+      context.restore();
+    }
+
+    function getStackedBarGeometry(chartRows, cssWidth, cssHeight) {
+      const margin = { top: 24, right: 18, bottom: 44, left: 64 };
+      const chartWidth = cssWidth - margin.left - margin.right;
+      const chartHeight = cssHeight - margin.top - margin.bottom;
+      const maxValue = Math.max(
+        ...chartRows.map((row) => row.selectedComponents.reduce((sum, key) => sum + row[key], 0)),
+        0
+      );
+      const barWidth = Math.max(10, chartWidth / chartRows.length - 8);
+      const gap = (chartWidth - barWidth * chartRows.length) / Math.max(1, chartRows.length - 1 || 1);
+
+      return { margin, chartWidth, chartHeight, maxValue, barWidth, gap };
+    }
+
+    function getStackedBarHit(event, canvas, chartRows) {
+      if (!chartRows.length) {
+        return null;
+      }
+
+      const { x, y } = getCanvasPoint(event, canvas);
+      const { margin, chartHeight, maxValue, barWidth, gap } =
+        getStackedBarGeometry(chartRows, canvas.clientWidth, canvas.clientHeight);
+      const yBase = margin.top + chartHeight;
+
+      for (let index = 0; index < chartRows.length; index += 1) {
+        const row = chartRows[index];
+        const total = row.selectedComponents.reduce((sum, key) => sum + row[key], 0);
+        const xStart = margin.left + index * (barWidth + gap);
+        const totalHeight = maxValue === 0 ? 0 : (total / maxValue) * chartHeight;
+        const yTop = yBase - totalHeight;
+
+        if (x >= xStart && x <= xStart + barWidth && y >= yTop && y <= yBase) {
+          return row;
+        }
+      }
+
+      return null;
+    }
+
+    function getLinePointHit(event, canvas, series) {
+      if (!series.length) {
+        return null;
+      }
+
+      const { x, y } = getCanvasPoint(event, canvas);
+      const margin = { top: 24, right: 18, bottom: 44, left: 64 };
+      const chartWidth = canvas.clientWidth - margin.left - margin.right;
+      const chartHeight = canvas.clientHeight - margin.top - margin.bottom;
+      const maxValue = Math.max(...series.map((point) => point.runningTotal), 0);
+      const xStep = series.length > 1 ? chartWidth / (series.length - 1) : 0;
+
+      for (let index = 0; index < series.length; index += 1) {
+        const point = series[index];
+        const pointX = margin.left + index * xStep;
+        const pointY = margin.top + chartHeight - (maxValue === 0 ? 0 : (point.runningTotal / maxValue) * chartHeight);
+        const distance = Math.hypot(x - pointX, y - pointY);
+
+        if (distance <= 12) {
+          return point;
+        }
+      }
+
+      return null;
+    }
+
+    function renderStackedLegend() {
+      const selectedComponents = getSelectedStackedComponents();
+      stackedLegend.innerHTML = selectedComponents
+        .map((key) => {
+          const config = stackedComponentConfig[key];
+          return `<span><i style="background:${config.color};"></i>${config.label}</span>`;
+        })
+        .join("");
+    }
+
+    function drawChart(yearlyRows) {
+      const { context, cssWidth, cssHeight } = configureCanvas(chartCanvas);
+      const chartRows = getStackedChartSeries(yearlyRows);
+      renderStackedLegend();
+      const { margin, chartWidth, chartHeight, maxValue, barWidth, gap } =
+        getStackedBarGeometry(chartRows, cssWidth, cssHeight);
+      const selectedComponents = getSelectedStackedComponents();
+
+      context.strokeStyle = "rgba(94, 76, 52, 0.18)";
+      context.fillStyle = "#635d55";
+      context.font = '12px Arial';
+
+      for (let step = 0; step <= 4; step += 1) {
+        const y = margin.top + chartHeight - (chartHeight * step) / 4;
+        const value = (maxValue * step) / 4;
+        context.beginPath();
+        context.moveTo(margin.left, y);
+        context.lineTo(cssWidth - margin.right, y);
+        context.stroke();
+        context.fillText(currencyFormatter.format(value), 8, y + 4);
+      }
+
+      if (!selectedComponents.length) {
+        context.fillStyle = "#635d55";
+        context.font = "16px Arial";
+        context.fillText("Select at least one stacked cost component.", margin.left + 12, margin.top + 28);
+        context.strokeStyle = "rgba(94, 76, 52, 0.4)";
+        context.beginPath();
+        context.moveTo(margin.left, margin.top);
+        context.lineTo(margin.left, margin.top + chartHeight);
+        context.lineTo(cssWidth - margin.right, margin.top + chartHeight);
+        context.stroke();
+        chartCanvas.dataset.yearly = JSON.stringify(yearlyRows);
+        return;
+      }
+
+      chartRows.forEach((row, index) => {
+        const total = selectedComponents.reduce((sum, key) => sum + row[key], 0);
+        const x = margin.left + index * (barWidth + gap);
+        const totalHeight = maxValue === 0 ? 0 : (total / maxValue) * chartHeight;
+        const yBase = margin.top + chartHeight;
+        let currentTop = yBase;
+
+        selectedComponents.forEach((key) => {
+          const segmentValue = row[key];
+          const segmentHeight = total === 0 ? 0 : (segmentValue / total) * totalHeight;
+          context.fillStyle = stackedComponentConfig[key].color;
+          context.fillRect(x, currentTop - segmentHeight, barWidth, segmentHeight);
+          currentTop -= segmentHeight;
+        });
+
+        if (selectedStackedBarYear === row.year) {
+          context.strokeStyle = "#1e2430";
+          context.lineWidth = 2;
+          context.strokeRect(x - 1, yBase - totalHeight - 1, barWidth + 2, totalHeight + 2);
+        }
+
+        context.fillStyle = "#635d55";
+        context.fillText(String(row.year), x + barWidth / 2 - 8, cssHeight - 16);
+      });
+
+      context.strokeStyle = "rgba(94, 76, 52, 0.4)";
+      context.beginPath();
+      context.moveTo(margin.left, margin.top);
+      context.lineTo(margin.left, margin.top + chartHeight);
+      context.lineTo(cssWidth - margin.right, margin.top + chartHeight);
+      context.stroke();
+
+      const selectedRow = chartRows.find((row) => row.year === selectedStackedBarYear);
+      if (selectedRow) {
+        const index = chartRows.findIndex((row) => row.year === selectedRow.year);
+        const total = selectedComponents.reduce((sum, key) => sum + selectedRow[key], 0);
+        const x = margin.left + index * (barWidth + gap) + barWidth / 2;
+        const y = margin.top + chartHeight - (maxValue === 0 ? 0 : (total / maxValue) * chartHeight);
+        const modeLabel = getStackedViewMode() === "monthly" ? "Monthly" : "Yearly";
+        const annotationLines = [`Year ${selectedRow.year}`];
+
+        selectedComponents.forEach((key) => {
+          annotationLines.push(
+            `${modeLabel} ${stackedComponentConfig[key].label.toLowerCase()}: ${currencyFormatter.format(selectedRow[key])}`
+          );
+        });
+        annotationLines.push(`${modeLabel} total: ${currencyFormatter.format(total)}`);
+
+        drawAnnotation(
+          context,
+          x,
+          y,
+          annotationLines,
+          "#b3562d"
+        );
+      }
+
+      chartCanvas.dataset.yearly = JSON.stringify(yearlyRows);
+    }
+
+    function updateChartFootnote() {
+      if (!latestCalculation || !latestValues) {
+        chartFootnote.textContent = "";
+        return;
+      }
+
+      const modeLabel = getStackedViewMode() === "monthly" ? "average monthly amounts by year" : "yearly totals";
+      const selectedLabels = getSelectedStackedComponents()
+        .map((key) => stackedComponentConfig[key].label.toLowerCase());
+      chartFootnote.textContent =
+        `Loan amount ${currencyFormatter.format(latestCalculation.loanAmount)} over ${latestValues.loanTermYears} years at ` +
+        `${percentFormatter.format(latestValues.annualInterestRate)}% interest. Stack view is showing ${modeLabel}` +
+        `${selectedLabels.length ? ` for ${selectedLabels.join(", ")}.` : "."} Property tax uses 1% annual assessed-value growth. Insurance and HOA use 2% annual growth.`;
+    }
+
+    function getSelectedTotalCostComponents() {
+      return totalCostInputs.filter((input) => input.checked).map((input) => input.value);
+    }
+
+    function getTotalCostSeries(yearlyRows) {
+      const selectedComponents = getSelectedTotalCostComponents();
+      let runningTotal = 0;
+
+      const series = yearlyRows.map((row) => {
+        const yearlyTotal = selectedComponents.reduce((sum, key) => sum + row[key], 0);
+        runningTotal += yearlyTotal;
+
+        return {
+          year: row.year,
+          yearlyTotal,
+          runningTotal
+        };
+      });
+
+      return { selectedComponents, series };
+    }
+
+    function renderTotalCostChart(yearlyRows) {
+      const { context, cssWidth, cssHeight } = configureCanvas(totalCostCanvas);
+      const margin = { top: 24, right: 18, bottom: 44, left: 64 };
+      const chartWidth = cssWidth - margin.left - margin.right;
+      const chartHeight = cssHeight - margin.top - margin.bottom;
+      const { selectedComponents, series } = getTotalCostSeries(yearlyRows);
+      const maxValue = Math.max(...series.map((point) => point.runningTotal), 0);
+
+      context.strokeStyle = "rgba(94, 76, 52, 0.18)";
+      context.fillStyle = "#635d55";
+      context.font = "12px Arial";
+
+      for (let step = 0; step <= 4; step += 1) {
+        const y = margin.top + chartHeight - (chartHeight * step) / 4;
+        const value = (maxValue * step) / 4;
+        context.beginPath();
+        context.moveTo(margin.left, y);
+        context.lineTo(cssWidth - margin.right, y);
+        context.stroke();
+        context.fillText(currencyFormatter.format(value), 8, y + 4);
+      }
+
+      context.strokeStyle = "rgba(94, 76, 52, 0.4)";
+      context.beginPath();
+      context.moveTo(margin.left, margin.top);
+      context.lineTo(margin.left, margin.top + chartHeight);
+      context.lineTo(cssWidth - margin.right, margin.top + chartHeight);
+      context.stroke();
+
+      if (!selectedComponents.length || !series.length) {
+        context.fillStyle = "#635d55";
+        context.font = "16px Arial";
+        context.fillText("Select at least one cost component.", margin.left + 12, margin.top + 28);
+        totalCostFootnote.textContent = "No components selected.";
+        return;
+      }
+
+      const xStep = series.length > 1 ? chartWidth / (series.length - 1) : 0;
+      const points = series.map((point, index) => {
+        const x = margin.left + index * xStep;
+        const y = margin.top + chartHeight - (maxValue === 0 ? 0 : (point.runningTotal / maxValue) * chartHeight);
+        return { x, y, ...point };
+      });
+
+      context.beginPath();
+      context.moveTo(points[0].x, margin.top + chartHeight);
+      points.forEach((point) => {
+        context.lineTo(point.x, point.y);
+      });
+      context.lineTo(points[points.length - 1].x, margin.top + chartHeight);
+      context.closePath();
+      context.fillStyle = "rgba(179, 86, 45, 0.16)";
+      context.fill();
+
+      context.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) {
+          context.moveTo(point.x, point.y);
+        } else {
+          context.lineTo(point.x, point.y);
+        }
+      });
+      context.strokeStyle = "#b3562d";
+      context.lineWidth = 3;
+      context.stroke();
+
+      points.forEach((point) => {
+        context.beginPath();
+        context.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        context.fillStyle = "#b3562d";
+        context.fill();
+
+        if (selectedTotalCostPointYear === point.year) {
+          context.beginPath();
+          context.arc(point.x, point.y, 8, 0, Math.PI * 2);
+          context.strokeStyle = "#1e2430";
+          context.lineWidth = 2;
+          context.stroke();
+        }
+      });
+
+      context.fillStyle = "#635d55";
+      context.font = "12px Arial";
+      points.forEach((point) => {
+        context.fillText(String(point.year), point.x - 8, cssHeight - 16);
+      });
+
+      const selectedPoint = points.find((point) => point.year === selectedTotalCostPointYear);
+      if (selectedPoint) {
+        drawAnnotation(
+          context,
+          selectedPoint.x,
+          selectedPoint.y,
+          [
+            `Year ${selectedPoint.year}`,
+            `Added this year: ${currencyFormatter.format(selectedPoint.yearlyTotal)}`,
+            `Running total: ${currencyFormatter.format(selectedPoint.runningTotal)}`
+          ],
+          "#b3562d"
+        );
+      }
+
+      const selectedLabels = totalCostInputs
+        .filter((input) => input.checked)
+        .map((input) => input.parentElement.textContent.trim().toLowerCase());
+      const finalTotal = series[series.length - 1].runningTotal;
+      totalCostFootnote.textContent =
+        `Running total includes ${selectedLabels.join(", ")}. Final selected total: ${currencyFormatter.format(finalTotal)}.`;
+    }
+
+    function renderFromForm() {
+      const values = getFormValues();
+      const errors = validateInputs(values);
+
+      renderError(errors);
+
+      if (errors.length) {
+        return;
+      }
+
+      const calculation = calculateMortgage(values);
+      latestCalculation = calculation;
+      latestValues = values;
+      selectedStackedBarYear = null;
+      selectedTotalCostPointYear = null;
+      renderSummary(calculation, values);
+      renderTable(calculation.yearlyRows);
+      drawChart(calculation.yearlyRows);
+      renderTotalCostChart(calculation.yearlyRows);
+      updateChartFootnote();
+    }
+
+    function isClose(actual, expected, tolerance = 0.01) {
+      return Math.abs(actual - expected) <= tolerance;
+    }
+
+    function getLastRow(rows) {
+      return rows[rows.length - 1];
+    }
+
+    function runSanityTests() {
+      const baseValues = {
+        homePrice: 500000,
+        downPayment: 100000,
+        annualInterestRate: 6,
+        loanTermYears: 30,
+        propertyTaxRate: 1.25,
+        annualInsurance: 2400,
+        monthlyHoa: 350
+      };
+
+      const tests = [
+        {
+          name: "0% interest uses straight-line principal payments",
+          run() {
+            const values = {
+              homePrice: 120000,
+              downPayment: 0,
+              annualInterestRate: 0,
+              loanTermYears: 1,
+              propertyTaxRate: 0,
+              annualInsurance: 0,
+              monthlyHoa: 0
+            };
+            const result = calculateMortgage(values);
+            return isClose(result.monthlyMortgage, 10000);
+          }
+        },
+        {
+          name: "Year 1 HOA equals 12 monthly HOA payments",
+          run() {
+            const result = calculateMortgage(baseValues);
+            return isClose(result.firstYear.annualHoa, baseValues.monthlyHoa * 12);
+          }
+        },
+        {
+          name: "Year 1 insurance matches the entered annual insurance",
+          run() {
+            const result = calculateMortgage(baseValues);
+            return isClose(result.firstYear.annualInsurance, baseValues.annualInsurance);
+          }
+        },
+        {
+          name: "Year 1 property tax matches home price times tax rate",
+          run() {
+            const result = calculateMortgage(baseValues);
+            return isClose(result.firstYear.annualTax, baseValues.homePrice * (baseValues.propertyTaxRate / 100));
+          }
+        },
+        {
+          name: "First-year principal and interest add up to 12 mortgage payments",
+          run() {
+            const result = calculateMortgage(baseValues);
+            return isClose(
+              result.firstYear.principalPaid + result.firstYear.interestPaid,
+              result.monthlyMortgage * 12,
+              0.1
+            );
+          }
+        },
+        {
+          name: "Remaining balance decreases and ends at zero",
+          run() {
+            const result = calculateMortgage(baseValues);
+            const lastRow = getLastRow(result.yearlyRows);
+            const balancesDecrease = result.yearlyRows.every((row, index, rows) => {
+              if (index === 0) {
+                return row.endingBalance <= result.loanAmount;
+              }
+
+              return row.endingBalance <= rows[index - 1].endingBalance;
+            });
+            return balancesDecrease && isClose(lastRow.endingBalance, 0, 0.1);
+          }
+        },
+        {
+          name: "Zero recurring costs leave total monthly cost equal to mortgage only",
+          run() {
+            const values = {
+              homePrice: 300000,
+              downPayment: 60000,
+              annualInterestRate: 5.5,
+              loanTermYears: 30,
+              propertyTaxRate: 0,
+              annualInsurance: 0,
+              monthlyHoa: 0
+            };
+            const result = calculateMortgage(values);
+            return isClose(result.totalMonthlyCost, result.monthlyMortgage);
+          }
+        },
+        {
+          name: "Full down payment produces a zero loan amount and zero mortgage",
+          run() {
+            const values = {
+              homePrice: 250000,
+              downPayment: 250000,
+              annualInterestRate: 4.5,
+              loanTermYears: 30,
+              propertyTaxRate: 1,
+              annualInsurance: 1200,
+              monthlyHoa: 100
+            };
+            const result = calculateMortgage(values);
+            return isClose(result.loanAmount, 0) && isClose(result.monthlyMortgage, 0);
+          }
+        }
+      ];
+
+      return tests.map((test) => {
+        try {
+          return {
+            name: test.name,
+            passed: Boolean(test.run())
+          };
+        } catch (error) {
+          return {
+            name: test.name,
+            passed: false,
+            details: error instanceof Error ? error.message : String(error)
+          };
+        }
+      });
+    }
+
+    function renderTestResults(results) {
+      const passedCount = results.filter((result) => result.passed).length;
+      testResults.innerHTML = [
+        `<div class="test-result ${passedCount === results.length ? "pass" : ""}">${passedCount}/${results.length} checks passed.</div>`,
+        ...results.map((result) => {
+          const details = result.details ? ` ${result.details}` : "";
+          return `<div class="test-result ${result.passed ? "pass" : "fail"}">${result.passed ? "PASS" : "FAIL"}: ${result.name}.${details}</div>`;
+        })
+      ].join("");
+    }
+
+    renderFromForm();
+  </script>
+</body>
+</html>

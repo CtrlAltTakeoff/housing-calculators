@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Affordability Calculator</title>
+  <style>
+    :root {
+      --bg: #f2ede3;
+      --panel: #fffaf2;
+      --panel-strong: #fff;
+      --ink: #1f2a2c;
+      --muted: #5c6b6d;
+      --line: #d7ccb7;
+      --accent: #9b4d2f;
+      --accent-soft: #f3dfcf;
+      --good: #2e6f4e;
+      --shadow: 0 24px 60px rgba(46, 33, 20, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(155, 77, 47, 0.15), transparent 30%),
+        linear-gradient(180deg, #efe7d9 0%, #f8f4ec 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.25rem, 5vw, 4.5rem);
+      line-height: 0.95;
+      max-width: 12ch;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 68ch;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.1fr) minmax(280px, 0.9fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(125, 94, 65, 0.18);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .calculator {
+      padding: 24px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 12px 16px;
+      font: inherit;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .tab.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .mode {
+      display: none;
+      gap: 16px;
+    }
+
+    .mode.active {
+      display: grid;
+    }
+
+    .fieldset {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .fieldset h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+
+    .fieldset p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .field {
+      grid-column: span 12;
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.half {
+      grid-column: span 6;
+    }
+
+    .field.third {
+      grid-column: span 4;
+    }
+
+    label {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .help-button {
+      width: 20px;
+      height: 20px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      padding: 0;
+      background: var(--panel-strong);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .help-button[aria-expanded="true"] {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .money-input {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      align-items: stretch;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-strong);
+      overflow: hidden;
+    }
+
+    .money-input span {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-weight: 700;
+      border-right: 1px solid var(--line);
+      background: rgba(243, 223, 207, 0.35);
+    }
+
+    .money-input input {
+      border: 0;
+      border-radius: 0;
+      min-width: 0;
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .hint[hidden] {
+      display: none;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-strong);
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+    }
+
+    input:disabled,
+    select:disabled {
+      cursor: not-allowed;
+      color: var(--muted);
+      background: #f1ece3;
+      border-color: #ded4c2;
+    }
+
+    .field.disabled {
+      opacity: 0.58;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus {
+      outline: 2px solid rgba(155, 77, 47, 0.35);
+      outline-offset: 2px;
+    }
+
+    .inline {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 118px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 20px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .results {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .result-hero {
+      padding: 20px;
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgba(155, 77, 47, 0.14), rgba(46, 111, 78, 0.1)),
+        #fff;
+      border: 1px solid rgba(125, 94, 65, 0.15);
+    }
+
+    .result-hero h2,
+    .result-card h3 {
+      margin: 0;
+    }
+
+    .result-hero .value {
+      margin: 12px 0 6px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1;
+    }
+
+    .result-hero p,
+    .result-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .metrics,
+    .breakdown {
+      display: grid;
+      gap: 12px;
+    }
+
+    .expense-chart {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .pie-chart {
+      width: 150px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #d9d0c2;
+      box-shadow: inset 0 0 0 1px rgba(31, 42, 44, 0.08);
+      position: relative;
+    }
+
+    .pie-chart::after {
+      content: "";
+      position: absolute;
+      inset: 31%;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 1px rgba(31, 42, 44, 0.06);
+    }
+
+    .legend {
+      display: grid;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 12px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--swatch);
+    }
+
+    .legend-value {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .metric,
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: baseline;
+    }
+
+    .metric strong,
+    .row strong {
+      font-size: 1.05rem;
+    }
+
+    .result-card {
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(125, 94, 65, 0.15);
+      background: #fff;
+      display: grid;
+      gap: 14px;
+    }
+
+    .status {
+      font-weight: 700;
+      color: var(--good);
+    }
+
+    .note {
+      font-size: 0.9rem;
+    }
+
+    .explain {
+      margin-top: 22px;
+      padding: 22px 24px;
+    }
+
+    .explain h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+
+    .explain p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .formula {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .results {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .calculator,
+      .results {
+        padding: 18px;
+      }
+
+      .field.half,
+      .field.third {
+        grid-column: span 12;
+      }
+
+      .inline {
+        grid-template-columns: 1fr;
+      }
+
+      .expense-chart {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+
+      .legend {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Mortgage affordability planner</p>
+      <h1>House Affordability Calculator</h1>
+      <p>
+        Estimate the maximum home price that fits your income or monthly housing budget. Choose an
+        income-based or budget-based mode, enter your mortgage terms and ownership costs, and the results
+        update automatically as each field changes.
+      </p>
+    </section>
+
+    <section class="layout">
+      <form class="panel calculator" id="calculatorForm">
+        <div class="tabs" role="tablist" aria-label="Calculation modes">
+          <button class="tab active" type="button" data-mode="income" aria-pressed="true">Income based</button>
+          <button class="tab" type="button" data-mode="budget" aria-pressed="false">Budget based</button>
+        </div>
+
+        <div class="mode active" data-panel="income">
+          <section class="fieldset">
+            <h2>Income and financing</h2>
+            <p>Estimate affordability from household income, lender DTI limits, and recurring monthly debt.</p>
+            <div class="grid">
+              <div class="field half">
+                <label for="annualIncome">Annual household income</label>
+                <div class="money-input">
+                  <span aria-hidden="true">$</span>
+                  <input id="annualIncome" name="annualIncome" type="text" inputmode="numeric" value="120,000" data-format="currency">
+                </div>
+              </div>
+              <div class="field half">
+                <div class="label-row">
+                  <label for="monthlyDebt">Monthly debt payback</label>
+                  <button class="help-button" type="button" id="monthlyDebtHelpButton" aria-expanded="false" aria-controls="monthlyDebtHint">?</button>
+                </div>
+                <div class="money-input">
+                  <span aria-hidden="true">$</span>
+                  <input id="monthlyDebt" name="monthlyDebt" type="text" inputmode="numeric" value="0" data-format="currency" aria-describedby="monthlyDebtHint">
+                </div>
+                <span class="hint" id="monthlyDebtHint" hidden>Car loans, student loans, credit cards, and similar recurring debts.</span>
+              </div>
+              <div class="field half">
+                <label for="loanTerm">Mortgage loan term</label>
+                <input id="loanTerm" name="loanTerm" type="number" min="1" max="40" step="1" value="30">
+              </div>
+              <div class="field half">
+                <label for="interestRate">Interest rate</label>
+                <input id="interestRate" name="interestRate" type="number" min="0" step="0.001" value="6.458">
+              </div>
+              <div class="field half">
+                <label for="dtiProfile">Debt-to-income rule</label>
+                <select id="dtiProfile" name="dtiProfile">
+                  <option value="conventional">Conventional 28/36</option>
+                  <option value="fha">FHA 31/43</option>
+                  <option value="va">VA 41 back-end only</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div class="field half" id="customFrontWrap">
+                <label for="customFrontRatio">Custom front-end ratio</label>
+                <input id="customFrontRatio" name="customFrontRatio" type="number" min="1" max="60" step="0.5" value="28">
+              </div>
+              <div class="field half" id="customBackWrap">
+                <label for="customBackRatio">Custom back-end ratio</label>
+                <input id="customBackRatio" name="customBackRatio" type="number" min="1" max="60" step="0.5" value="36">
+              </div>
+            </div>
+          </section>
+
+          <section class="fieldset">
+            <h2>Cash and ownership costs</h2>
+            <p>Costs can be entered as percentages of home value or as fixed annual or monthly dollar amounts. Maintenance and repairs are assumed at 0.5% of the home value per year.</p>
+            <div class="grid">
+              <div class="field half">
+                <label for="incomeDownValue">Down payment</label>
+                <div class="inline">
+                  <input id="incomeDownValue" name="incomeDownValue" type="text" inputmode="numeric" value="20" data-format="mixed-currency">
+                  <select id="incomeDownUnit" name="incomeDownUnit">
+                    <option value="percent">Percent</option>
+                    <option value="amount">Dollar amount</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field half">
+                <label for="propertyTaxValue">Property tax</label>
+                <div class="inline">
+                  <input id="propertyTaxValue" name="propertyTaxValue" type="text" inputmode="decimal" value="1.5" data-format="mixed-currency">
+                  <select id="propertyTaxUnit" name="propertyTaxUnit">
+                    <option value="percent-year">Percent / year</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="amount-month">Amount / month</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field half">
+                <label for="hoaValue">HOA or co-op fee</label>
+                <div class="inline">
+                  <input id="hoaValue" name="hoaValue" type="text" inputmode="decimal" value="0" data-format="mixed-currency">
+                  <select id="hoaUnit" name="hoaUnit">
+                    <option value="amount-month">Amount / month</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="percent-year">Percent / year</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field half">
+                <label for="insuranceValue">Insurance</label>
+                <div class="inline">
+                  <input id="insuranceValue" name="insuranceValue" type="text" inputmode="decimal" value="0.5" data-format="mixed-currency">
+                  <select id="insuranceUnit" name="insuranceUnit">
+                    <option value="percent-year">Percent / year</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="amount-month">Amount / month</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="mode" data-panel="budget">
+          <section class="fieldset">
+            <h2>Budget and financing</h2>
+            <p>Estimate affordability from a fixed monthly housing budget rather than lender income ratios.</p>
+            <div class="grid">
+              <div class="field half">
+                <label for="monthlyBudget">Budget for house</label>
+                <div class="money-input">
+                  <span aria-hidden="true">$</span>
+                  <input id="monthlyBudget" name="monthlyBudget" type="text" inputmode="numeric" value="2,800" data-format="currency">
+                </div>
+              </div>
+              <div class="field half">
+                <label for="budgetLoanTerm">Mortgage loan term</label>
+                <input id="budgetLoanTerm" name="budgetLoanTerm" type="number" min="1" max="40" step="1" value="30">
+              </div>
+              <div class="field half">
+                <label for="budgetInterestRate">Interest rate</label>
+                <input id="budgetInterestRate" name="budgetInterestRate" type="number" min="0" step="0.001" value="6.458">
+              </div>
+              <div class="field half">
+                <label for="budgetDownValue">Down payment</label>
+                <div class="inline">
+                  <input id="budgetDownValue" name="budgetDownValue" type="text" inputmode="numeric" value="20" data-format="mixed-currency">
+                  <select id="budgetDownUnit" name="budgetDownUnit">
+                    <option value="percent">Percent</option>
+                    <option value="amount">Dollar amount</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="includeFeesInBudget">Budget includes taxes and fees</label>
+                <select id="includeFeesInBudget" name="includeFeesInBudget">
+                  <option value="yes">Yes, include tax, HOA, insurance, and maintenance</option>
+                  <option value="no">No, budget applies to mortgage payment only</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="fieldset">
+            <h2>Budget-side recurring costs</h2>
+            <p>These values affect budget-based affordability only. Maintenance and repairs default to 0.5% of the home value per year.</p>
+            <div class="grid">
+              <div class="field half">
+                <label for="budgetTaxValue">Property tax</label>
+                <div class="inline">
+                  <input id="budgetTaxValue" name="budgetTaxValue" type="text" inputmode="decimal" value="1.5" data-format="mixed-currency">
+                  <select id="budgetTaxUnit" name="budgetTaxUnit">
+                    <option value="percent-year">Percent / year</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="amount-month">Amount / month</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field half">
+                <label for="budgetHoaValue">HOA or co-op fee</label>
+                <div class="inline">
+                  <input id="budgetHoaValue" name="budgetHoaValue" type="text" inputmode="decimal" value="0" data-format="mixed-currency">
+                  <select id="budgetHoaUnit" name="budgetHoaUnit">
+                    <option value="amount-month">Amount / month</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="percent-year">Percent / year</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field half">
+                <label for="budgetInsuranceValue">Insurance</label>
+                <div class="inline">
+                  <input id="budgetInsuranceValue" name="budgetInsuranceValue" type="text" inputmode="decimal" value="0.5" data-format="mixed-currency">
+                  <select id="budgetInsuranceUnit" name="budgetInsuranceUnit">
+                    <option value="percent-year">Percent / year</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="amount-month">Amount / month</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field half">
+                <label for="maintenanceValue">Maintenance / repairs</label>
+                <div class="inline">
+                  <input id="maintenanceValue" name="maintenanceValue" type="text" inputmode="decimal" value="0.5" data-format="mixed-currency">
+                  <select id="maintenanceUnit" name="maintenanceUnit">
+                    <option value="percent-year">Percent / year</option>
+                    <option value="amount-year">Amount / year</option>
+                    <option value="amount-month">Amount / month</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" type="button" id="resetButton">Reset defaults</button>
+        </div>
+      </form>
+
+      <aside class="panel results" aria-live="polite">
+        <section class="result-hero">
+          <h2>Maximum house price</h2>
+          <div class="value" id="maxHousePrice">$0</div>
+          <p id="resultSummary">Adjust values to see the affordability estimate.</p>
+        </section>
+
+        <section class="result-card">
+          <h3>Monthly budget allocation</h3>
+          <div class="expense-chart">
+            <div class="pie-chart" id="monthlyExpensePie" role="img" aria-label="Monthly expense allocation chart"></div>
+            <div class="legend" id="monthlyExpenseLegend"></div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Principal and interest</span><strong id="principalInterest">$0</strong></div>
+            <div class="metric"><span>Property tax</span><strong id="propertyTaxMonthly">$0</strong></div>
+            <div class="metric"><span>HOA / co-op</span><strong id="hoaMonthly">$0</strong></div>
+            <div class="metric"><span>Insurance</span><strong id="insuranceMonthly">$0</strong></div>
+            <div class="metric"><span>Maintenance / repairs</span><strong id="maintenanceMonthly">$0</strong></div>
+            <div class="metric"><span>PMI estimate</span><strong id="pmiMonthly">$0</strong></div>
+            <div class="metric"><span>Total housing cost</span><strong id="totalHousingMonthly">$0</strong></div>
+          </div>
+        </section>
+
+        <section class="result-card">
+          <h3>Financing snapshot</h3>
+          <div class="breakdown">
+            <div class="row"><span>Loan amount</span><strong id="loanAmount">$0</strong></div>
+            <div class="row"><span>Down payment</span><strong id="downPayment">$0</strong></div>
+            <div class="row"><span>Gross monthly income</span><strong id="grossMonthlyIncome">$0</strong></div>
+            <div class="row"><span>Front-end DTI used</span><strong id="frontRatioUsed">n/a</strong></div>
+            <div class="row"><span>Back-end DTI used</span><strong id="backRatioUsed">n/a</strong></div>
+          </div>
+        </section>
+
+        <section class="result-card">
+          <h3>Rules applied</h3>
+          <p class="status" id="statusText">Waiting for calculation.</p>
+          <p class="note" id="noteText">
+            Assumes 0.5% annual PMI when the down payment is below 20%, plus 0.5% of home value per year for maintenance and repairs.
+          </p>
+        </section>
+      </aside>
+    </section>
+
+    <section class="panel explain">
+      <h2>Front-End and Back-End Ratio Explained</h2>
+      <p>
+        The <strong>front-end ratio</strong> measures how much of gross monthly income can go to housing costs.
+        In this calculator, housing cost includes principal and interest, property tax, HOA, insurance, maintenance and repairs, and PMI when applicable.
+      </p>
+      <p class="formula">Front-end ratio = monthly housing cost / gross monthly income</p>
+      <p>
+        The <strong>back-end ratio</strong> measures how much of gross monthly income can go to total debt.
+        Total debt includes housing costs plus recurring non-housing obligations such as car loans, student loans, and credit cards.
+      </p>
+      <p class="formula">Back-end ratio = (monthly housing cost + monthly non-housing debt) / gross monthly income</p>
+      <p>
+        In income-based mode, the calculator finds the maximum home price that stays within the selected lender rule.
+        For example, a conventional 28/36 rule means housing should stay at or below 28% of gross monthly income,
+        and all monthly debt together should stay at or below 36%.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("calculatorForm");
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const modes = Array.from(document.querySelectorAll(".mode"));
+    const customFrontWrap = document.getElementById("customFrontWrap");
+    const customBackWrap = document.getElementById("customBackWrap");
+    const customFrontRatio = document.getElementById("customFrontRatio");
+    const customBackRatio = document.getElementById("customBackRatio");
+    const dtiProfile = document.getElementById("dtiProfile");
+
+    const defaults = {
+      annualIncome: 120000,
+      monthlyDebt: 0,
+      loanTerm: 30,
+      interestRate: 6.458,
+      dtiProfile: "conventional",
+      customFrontRatio: 28,
+      customBackRatio: 36,
+      incomeDownValue: 20,
+      incomeDownUnit: "percent",
+      propertyTaxValue: 1.5,
+      propertyTaxUnit: "percent-year",
+      hoaValue: 0,
+      hoaUnit: "amount-month",
+      insuranceValue: 0.5,
+      insuranceUnit: "percent-year",
+      monthlyBudget: 2800,
+      budgetLoanTerm: 30,
+      budgetInterestRate: 6.458,
+      budgetDownValue: 20,
+      budgetDownUnit: "percent",
+      includeFeesInBudget: "yes",
+      budgetTaxValue: 1.5,
+      budgetTaxUnit: "percent-year",
+      budgetHoaValue: 0,
+      budgetHoaUnit: "amount-month",
+      budgetInsuranceValue: 0.5,
+      budgetInsuranceUnit: "percent-year",
+      maintenanceValue: 0.5,
+      maintenanceUnit: "percent-year"
+    };
+
+    let activeMode = "income";
+    const formatInputs = Array.from(form.querySelectorAll("input[data-format]"));
+    const PMI_ANNUAL_RATE = 0.005;
+    const MAINTENANCE_ANNUAL_RATE = 0.005;
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        activeMode = tab.dataset.mode;
+        tabs.forEach((item) => {
+          const active = item === tab;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-pressed", String(active));
+        });
+        modes.forEach((panel) => {
+          panel.classList.toggle("active", panel.dataset.panel === activeMode);
+        });
+        calculate();
+      });
+    });
+
+    dtiProfile.addEventListener("change", syncDtiFields);
+    document.getElementById("resetButton").addEventListener("click", resetDefaults);
+    document.getElementById("monthlyDebtHelpButton").addEventListener("click", toggleMonthlyDebtHelp);
+    form.addEventListener("input", refreshCalculation);
+    form.addEventListener("change", refreshCalculation);
+
+    function syncDtiFields() {
+      const custom = dtiProfile.value === "custom";
+      customFrontRatio.disabled = !custom;
+      customBackRatio.disabled = !custom;
+      customFrontWrap.classList.toggle("disabled", !custom);
+      customBackWrap.classList.toggle("disabled", !custom);
+      customFrontWrap.setAttribute("aria-disabled", String(!custom));
+      customBackWrap.setAttribute("aria-disabled", String(!custom));
+    }
+
+    function resetDefaults() {
+      Object.entries(defaults).forEach(([key, value]) => {
+        const field = form.elements.namedItem(key);
+        if (field) {
+          field.value = value;
+        }
+      });
+      activeMode = "income";
+      tabs.forEach((tab) => {
+        const active = tab.dataset.mode === "income";
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-pressed", String(active));
+      });
+      modes.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.panel === "income");
+      });
+      syncDtiFields();
+      setMonthlyDebtHelp(false);
+      formatAllInputs();
+      calculate();
+    }
+
+    function setMonthlyDebtHelp(expanded) {
+      const button = document.getElementById("monthlyDebtHelpButton");
+      const hint = document.getElementById("monthlyDebtHint");
+      button.setAttribute("aria-expanded", String(expanded));
+      hint.hidden = !expanded;
+    }
+
+    function toggleMonthlyDebtHelp() {
+      const button = document.getElementById("monthlyDebtHelpButton");
+      setMonthlyDebtHelp(button.getAttribute("aria-expanded") !== "true");
+    }
+
+    function refreshCalculation() {
+      syncDtiFields();
+      calculate();
+    }
+
+    function valueOf(name) {
+      const field = form.elements.namedItem(name);
+      return field ? field.value : "";
+    }
+
+    function numberOf(name) {
+      const parsed = parseFloat(String(valueOf(name)).replace(/,/g, ""));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function currency(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(Math.max(0, value));
+    }
+
+    function percent(value) {
+      if (value === null || value === undefined || Number.isNaN(value)) {
+        return "n/a";
+      }
+      return `${Math.round(value)}%`;
+    }
+
+    const expenseColors = [
+      "#2f6f73",
+      "#9b4d2f",
+      "#d89a31",
+      "#5f5aa2",
+      "#2e6f4e",
+      "#b54b63"
+    ];
+
+    function isCurrencyUnit(unit) {
+      return unit === "amount" || unit === "amount-year" || unit === "amount-month";
+    }
+
+    function formatNumericInputValue(rawValue, asCurrency) {
+      const cleaned = String(rawValue).replace(/[^\d.]/g, "");
+      if (!cleaned) {
+        return "";
+      }
+      const parts = cleaned.split(".");
+      const integerPart = parts[0] || "0";
+      const decimalPart = parts.length > 1 ? `.${parts[1].slice(0, 3)}` : "";
+      const grouped = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return asCurrency ? `${grouped}${decimalPart}` : `${integerPart}${decimalPart}`;
+    }
+
+    function shouldFormatAsCurrency(input) {
+      const mode = input.dataset.format;
+      if (mode === "currency") {
+        return true;
+      }
+      if (mode !== "mixed-currency") {
+        return false;
+      }
+      if (input.id === "incomeDownValue") {
+        return valueOf("incomeDownUnit") === "amount";
+      }
+      if (input.id === "budgetDownValue") {
+        return valueOf("budgetDownUnit") === "amount";
+      }
+      if (input.id === "propertyTaxValue") {
+        return isCurrencyUnit(valueOf("propertyTaxUnit"));
+      }
+      if (input.id === "hoaValue") {
+        return isCurrencyUnit(valueOf("hoaUnit"));
+      }
+      if (input.id === "insuranceValue") {
+        return isCurrencyUnit(valueOf("insuranceUnit"));
+      }
+      if (input.id === "budgetTaxValue") {
+        return isCurrencyUnit(valueOf("budgetTaxUnit"));
+      }
+      if (input.id === "budgetHoaValue") {
+        return isCurrencyUnit(valueOf("budgetHoaUnit"));
+      }
+      if (input.id === "budgetInsuranceValue") {
+        return isCurrencyUnit(valueOf("budgetInsuranceUnit"));
+      }
+      if (input.id === "maintenanceValue") {
+        return isCurrencyUnit(valueOf("maintenanceUnit"));
+      }
+      return false;
+    }
+
+    function formatInputElement(input) {
+      input.value = formatNumericInputValue(input.value, shouldFormatAsCurrency(input));
+    }
+
+    function formatAllInputs() {
+      formatInputs.forEach(formatInputElement);
+    }
+
+    function paymentFactor(ratePercent, years) {
+      const monthlyRate = ratePercent / 100 / 12;
+      const months = years * 12;
+      if (months <= 0) {
+        return 0;
+      }
+      if (monthlyRate === 0) {
+        return 1 / months;
+      }
+      const growth = Math.pow(1 + monthlyRate, months);
+      return (monthlyRate * growth) / (growth - 1);
+    }
+
+    function principalFromPayment(payment, ratePercent, years) {
+      const factor = paymentFactor(ratePercent, years);
+      if (factor <= 0) {
+        return 0;
+      }
+      return payment / factor;
+    }
+
+    function monthlyCostFromInput(homePrice, value, unit) {
+      if (unit === "percent-year") {
+        return (homePrice * (value / 100)) / 12;
+      }
+      if (unit === "amount-year") {
+        return value / 12;
+      }
+      return value;
+    }
+
+    function downPaymentAmount(homePrice, downValue, downUnit) {
+      if (downUnit === "percent") {
+        return homePrice * (downValue / 100);
+      }
+      return Math.min(homePrice, downValue);
+    }
+
+    function pmiMonthlyFor(loanAmount, homePrice, downPayment) {
+      if (homePrice <= 0 || loanAmount <= 0) {
+        return 0;
+      }
+      return downPayment / homePrice < 0.2 ? loanAmount * (PMI_ANNUAL_RATE / 12) : 0;
+    }
+
+    function monthlyTotalForHousePrice(homePrice, options) {
+      const downPayment = downPaymentAmount(homePrice, options.downValue, options.downUnit);
+      const loanAmount = Math.max(0, homePrice - downPayment);
+      return (
+        loanAmount * options.paymentFactor +
+        homePrice * options.variableMonthlyRate +
+        options.fixedMonthly +
+        pmiMonthlyFor(loanAmount, homePrice, downPayment)
+      );
+    }
+
+    function solveHousePriceForBudget(monthlyBudget, options) {
+      if (monthlyBudget <= 0) {
+        return 0;
+      }
+
+      let low = 0;
+      let high = Math.max(100000, options.downUnit === "amount" ? options.downValue * 2 : 100000);
+      while (monthlyTotalForHousePrice(high, options) <= monthlyBudget && high < 100000000) {
+        high *= 2;
+      }
+
+      for (let i = 0; i < 80; i += 1) {
+        const mid = (low + high) / 2;
+        if (monthlyTotalForHousePrice(mid, options) <= monthlyBudget) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+
+      return low;
+    }
+
+    function purchasePriceFromLoan(loanAmount, downValue, downUnit) {
+      if (downUnit === "percent") {
+        const ratio = downValue / 100;
+        if (ratio >= 1) {
+          return 0;
+        }
+        return loanAmount / (1 - ratio);
+      }
+      return loanAmount + downValue;
+    }
+
+    function dtiLimits() {
+      const profile = valueOf("dtiProfile");
+      if (profile === "conventional") {
+        return { front: 28, back: 36, label: "Conventional 28/36" };
+      }
+      if (profile === "fha") {
+        return { front: 31, back: 43, label: "FHA 31/43" };
+      }
+      if (profile === "va") {
+        return { front: null, back: 41, label: "VA 41 back-end only" };
+      }
+      return {
+        front: numberOf("customFrontRatio"),
+        back: numberOf("customBackRatio"),
+        label: "Custom DTI"
+      };
+    }
+
+    function solveIncomeMode() {
+      const annualIncome = numberOf("annualIncome");
+      const monthlyIncome = annualIncome / 12;
+      const monthlyDebt = numberOf("monthlyDebt");
+      const term = numberOf("loanTerm");
+      const rate = numberOf("interestRate");
+      const downValue = numberOf("incomeDownValue");
+      const downUnit = valueOf("incomeDownUnit");
+      const taxValue = numberOf("propertyTaxValue");
+      const taxUnit = valueOf("propertyTaxUnit");
+      const hoaValue = numberOf("hoaValue");
+      const hoaUnit = valueOf("hoaUnit");
+      const insuranceValue = numberOf("insuranceValue");
+      const insuranceUnit = valueOf("insuranceUnit");
+      const dti = dtiLimits();
+
+      const frontCap = dti.front === null ? Infinity : monthlyIncome * (dti.front / 100);
+      const backCap = (monthlyIncome * (dti.back / 100)) - monthlyDebt;
+      const housingBudget = Math.max(0, Math.min(frontCap, backCap));
+
+      const factor = paymentFactor(rate, term);
+
+      const linearMonthlyRate = (
+        (taxUnit === "percent-year" ? taxValue / 100 / 12 : 0) +
+        (hoaUnit === "percent-year" ? hoaValue / 100 / 12 : 0) +
+        (insuranceUnit === "percent-year" ? insuranceValue / 100 / 12 : 0) +
+        MAINTENANCE_ANNUAL_RATE / 12
+      );
+      const fixedMonthly = (
+        (taxUnit === "amount-year" ? taxValue / 12 : 0) + (taxUnit === "amount-month" ? taxValue : 0) +
+        (hoaUnit === "amount-year" ? hoaValue / 12 : 0) + (hoaUnit === "amount-month" ? hoaValue : 0) +
+        (insuranceUnit === "amount-year" ? insuranceValue / 12 : 0) + (insuranceUnit === "amount-month" ? insuranceValue : 0)
+      );
+
+      const housePrice = solveHousePriceForBudget(housingBudget, {
+        downValue,
+        downUnit,
+        paymentFactor: factor,
+        variableMonthlyRate: linearMonthlyRate,
+        fixedMonthly
+      });
+      const downPayment = downPaymentAmount(housePrice, downValue, downUnit);
+      const loanAmount = Math.max(0, housePrice - downPayment);
+      const principalInterest = loanAmount * factor;
+      const propertyTaxMonthly = monthlyCostFromInput(housePrice, taxValue, taxUnit);
+      const hoaMonthly = monthlyCostFromInput(housePrice, hoaValue, hoaUnit);
+      const insuranceMonthly = monthlyCostFromInput(housePrice, insuranceValue, insuranceUnit);
+      const maintenanceMonthly = housePrice * (MAINTENANCE_ANNUAL_RATE / 12);
+      const pmiMonthly = pmiMonthlyFor(loanAmount, housePrice, downPayment);
+      const totalHousingMonthly = principalInterest + propertyTaxMonthly + hoaMonthly + insuranceMonthly + maintenanceMonthly + pmiMonthly;
+
+      const limitedByFront = dti.front !== null && frontCap <= backCap;
+      let summary = `Estimated from ${dti.label}.`;
+      if (housingBudget <= 0) {
+        summary = "Debt obligations fully consume the allowed housing budget under the selected DTI rule.";
+      } else if (dti.front === null) {
+        summary = "Estimated from the VA-style back-end affordability cap only.";
+      } else {
+        summary = limitedByFront
+          ? "Estimated from the tighter front-end housing ratio."
+          : "Estimated from the tighter back-end debt ratio.";
+      }
+
+      return {
+        housePrice,
+        loanAmount,
+        downPayment,
+        principalInterest,
+        propertyTaxMonthly,
+        hoaMonthly,
+        insuranceMonthly,
+        maintenanceMonthly,
+        pmiMonthly,
+        totalHousingMonthly,
+        grossMonthlyIncome: monthlyIncome,
+        frontRatioUsed: dti.front,
+        backRatioUsed: dti.back,
+        status: `${dti.label} applied.`,
+        summary,
+        note: pmiMonthly > 0
+          ? "Assumes 0.5% annual PMI because the down payment is below 20%, plus 0.5% of home value per year for maintenance and repairs."
+          : "Assumes no PMI because the down payment is at least 20%, plus 0.5% of home value per year for maintenance and repairs."
+      };
+    }
+
+    function solveBudgetMode() {
+      const monthlyBudget = numberOf("monthlyBudget");
+      const term = numberOf("budgetLoanTerm");
+      const rate = numberOf("budgetInterestRate");
+      const downValue = numberOf("budgetDownValue");
+      const downUnit = valueOf("budgetDownUnit");
+      const includeFees = valueOf("includeFeesInBudget") === "yes";
+      const taxValue = numberOf("budgetTaxValue");
+      const taxUnit = valueOf("budgetTaxUnit");
+      const hoaValue = numberOf("budgetHoaValue");
+      const hoaUnit = valueOf("budgetHoaUnit");
+      const insuranceValue = numberOf("budgetInsuranceValue");
+      const insuranceUnit = valueOf("budgetInsuranceUnit");
+      const maintenanceValue = numberOf("maintenanceValue");
+      const maintenanceUnit = valueOf("maintenanceUnit");
+      const factor = paymentFactor(rate, term);
+
+      const linearMonthlyRate = includeFees ? (
+        (taxUnit === "percent-year" ? taxValue / 100 / 12 : 0) +
+        (hoaUnit === "percent-year" ? hoaValue / 100 / 12 : 0) +
+        (insuranceUnit === "percent-year" ? insuranceValue / 100 / 12 : 0) +
+        (maintenanceUnit === "percent-year" ? maintenanceValue / 100 / 12 : 0)
+      ) : 0;
+      const fixedMonthly = includeFees ? (
+        (taxUnit === "amount-year" ? taxValue / 12 : 0) + (taxUnit === "amount-month" ? taxValue : 0) +
+        (hoaUnit === "amount-year" ? hoaValue / 12 : 0) + (hoaUnit === "amount-month" ? hoaValue : 0) +
+        (insuranceUnit === "amount-year" ? insuranceValue / 12 : 0) + (insuranceUnit === "amount-month" ? insuranceValue : 0) +
+        (maintenanceUnit === "amount-year" ? maintenanceValue / 12 : 0) + (maintenanceUnit === "amount-month" ? maintenanceValue : 0)
+      ) : 0;
+
+      const housePrice = solveHousePriceForBudget(monthlyBudget, {
+        downValue,
+        downUnit,
+        paymentFactor: factor,
+        variableMonthlyRate: linearMonthlyRate,
+        fixedMonthly
+      });
+      const downPayment = downPaymentAmount(housePrice, downValue, downUnit);
+      const loanAmount = Math.max(0, housePrice - downPayment);
+      const principalInterest = loanAmount * factor;
+      const propertyTaxMonthly = includeFees ? monthlyCostFromInput(housePrice, taxValue, taxUnit) : 0;
+      const hoaMonthly = includeFees ? monthlyCostFromInput(housePrice, hoaValue, hoaUnit) : 0;
+      const insuranceMonthly = includeFees ? monthlyCostFromInput(housePrice, insuranceValue, insuranceUnit) : 0;
+      const maintenanceMonthly = includeFees ? monthlyCostFromInput(housePrice, maintenanceValue, maintenanceUnit) : 0;
+      const pmiMonthly = pmiMonthlyFor(loanAmount, housePrice, downPayment);
+      const totalHousingMonthly = principalInterest + propertyTaxMonthly + hoaMonthly + insuranceMonthly + maintenanceMonthly + pmiMonthly;
+
+      return {
+        housePrice,
+        loanAmount,
+        downPayment,
+        principalInterest,
+        propertyTaxMonthly,
+        hoaMonthly,
+        insuranceMonthly,
+        maintenanceMonthly,
+        pmiMonthly,
+        totalHousingMonthly,
+        grossMonthlyIncome: 0,
+        frontRatioUsed: null,
+        backRatioUsed: null,
+        status: includeFees ? "Fixed budget with ownership costs included." : "Fixed budget applied to mortgage only.",
+        summary: includeFees
+          ? "Budget was split across mortgage, taxes, insurance, HOA, maintenance, and possible PMI."
+          : "Budget was applied to principal, interest, and possible PMI only.",
+        note: pmiMonthly > 0
+          ? "Assumes 0.5% annual PMI because the down payment is below 20%, plus 0.5% of home value per year for maintenance and repairs when fees are included."
+          : "Assumes no PMI because the down payment is at least 20%, plus 0.5% of home value per year for maintenance and repairs when fees are included."
+      };
+    }
+
+    function render(result) {
+      document.getElementById("maxHousePrice").textContent = currency(result.housePrice);
+      document.getElementById("resultSummary").textContent = result.summary;
+      document.getElementById("principalInterest").textContent = currency(result.principalInterest);
+      document.getElementById("propertyTaxMonthly").textContent = currency(result.propertyTaxMonthly);
+      document.getElementById("hoaMonthly").textContent = currency(result.hoaMonthly);
+      document.getElementById("insuranceMonthly").textContent = currency(result.insuranceMonthly);
+      document.getElementById("maintenanceMonthly").textContent = currency(result.maintenanceMonthly);
+      document.getElementById("pmiMonthly").textContent = currency(result.pmiMonthly);
+      document.getElementById("totalHousingMonthly").textContent = currency(result.totalHousingMonthly);
+      document.getElementById("loanAmount").textContent = currency(result.loanAmount);
+      document.getElementById("downPayment").textContent = currency(result.downPayment);
+      document.getElementById("grossMonthlyIncome").textContent = result.grossMonthlyIncome > 0 ? currency(result.grossMonthlyIncome) : "n/a";
+      document.getElementById("frontRatioUsed").textContent = percent(result.frontRatioUsed);
+      document.getElementById("backRatioUsed").textContent = percent(result.backRatioUsed);
+      document.getElementById("statusText").textContent = result.status;
+      document.getElementById("noteText").textContent = result.note;
+      renderExpenseChart(result);
+    }
+
+    function renderExpenseChart(result) {
+      const expenses = [
+        { label: "Principal and interest", value: result.principalInterest },
+        { label: "Property tax", value: result.propertyTaxMonthly },
+        { label: "HOA / co-op", value: result.hoaMonthly },
+        { label: "Insurance", value: result.insuranceMonthly },
+        { label: "Maintenance / repairs", value: result.maintenanceMonthly },
+        { label: "PMI estimate", value: result.pmiMonthly }
+      ];
+      const total = expenses.reduce((sum, item) => sum + Math.max(0, item.value), 0);
+      const pie = document.getElementById("monthlyExpensePie");
+      const legend = document.getElementById("monthlyExpenseLegend");
+
+      if (total <= 0) {
+        pie.style.background = "#d9d0c2";
+        pie.setAttribute("aria-label", "No monthly expenses to chart yet.");
+        legend.innerHTML = "";
+        return;
+      }
+
+      let cursor = 0;
+      const segments = expenses.map((item, index) => {
+        const start = cursor;
+        const share = Math.max(0, item.value) / total;
+        cursor += share * 100;
+        return `${expenseColors[index]} ${start}% ${cursor}%`;
+      });
+
+      pie.style.background = `conic-gradient(${segments.join(", ")})`;
+      pie.setAttribute("aria-label", `Monthly expense allocation totaling ${currency(total)}.`);
+      legend.innerHTML = expenses.map((item, index) => {
+        const share = total > 0 ? Math.round((Math.max(0, item.value) / total) * 100) : 0;
+        return `
+          <div class="legend-item" style="--swatch: ${expenseColors[index]}">
+            <span class="legend-swatch" aria-hidden="true"></span>
+            <span>${item.label}</span>
+            <span class="legend-value">${share}%</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function calculate() {
+      const result = activeMode === "income" ? solveIncomeMode() : solveBudgetMode();
+      render(result);
+    }
+
+    formatInputs.forEach((input) => {
+      input.addEventListener("input", () => formatInputElement(input));
+    });
+
+    [
+      "incomeDownUnit",
+      "propertyTaxUnit",
+      "hoaUnit",
+      "insuranceUnit",
+      "budgetDownUnit",
+      "budgetTaxUnit",
+      "budgetHoaUnit",
+      "budgetInsuranceUnit",
+      "maintenanceUnit"
+    ].forEach((name) => {
+      form.elements.namedItem(name).addEventListener("change", () => {
+        formatAllInputs();
+        calculate();
+      });
+    });
+
+    syncDtiFields();
+    formatAllInputs();
+    calculate();
+  </script>
+</body>
+</html>
