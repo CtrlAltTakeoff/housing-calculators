@@ -471,8 +471,23 @@
         grid-template-columns: 1fr;
       }
 
+      .layout > *,
+      .results,
+      .panel,
+      .chart-panel,
+      .table-panel,
+      .chart-wrap {
+        min-width: 0;
+      }
+
       .form-panel {
         position: static;
+      }
+
+      .home-link,
+      button,
+      input {
+        min-height: 44px;
       }
 
       canvas {

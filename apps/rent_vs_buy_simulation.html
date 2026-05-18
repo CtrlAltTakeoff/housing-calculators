@@ -386,9 +386,54 @@
     }
 
     @media (max-width: 740px) {
+      .form-panel,
+      .result-panel {
+        max-height: none;
+        overflow: visible;
+      }
+
+      .home-link,
+      button,
+      input,
+      select {
+        min-height: 44px;
+      }
+
       .field-grid {
         grid-template-columns: 1fr;
       }
+
+      .input-shell {
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+      }
+
+      .help-btn,
+      .step-btn {
+        width: 44px;
+        min-width: 44px;
+        min-height: 44px;
+      }
+
+      .chart-control {
+        width: 100%;
+      }
+
+      .chart-control select {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .result-panel {
+        border-right: 0;
+      }
+
+      .result-panel > *,
+      .summary,
+      .card,
+      .chart-wrap {
+        min-width: 0;
+      }
+
       .summary {
         grid-template-columns: 1fr;
       }
